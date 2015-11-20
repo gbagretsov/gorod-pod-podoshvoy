@@ -6,8 +6,9 @@ import java.util.Scanner;
 class CITY {
 
     //______ поля _______
-    public int city_size;
-    public int[][] MyCity;
+    private String path = "C://ForFileManager//MAC.txt";
+    private int city_size;
+    private int[][] CityArray = null;
 
     //_______ конструктор __________
     public CITY(int size) throws FileNotFoundException {
@@ -19,27 +20,24 @@ class CITY {
     //___________________ методы _____________________________
     public void INPUT (int size) throws FileNotFoundException {
 
-        MyCity = new int[size][size];
-        String path = "C://ForFileManager//MAC.txt";
-        Scanner sc = new Scanner(new File(path));
+        CityArray = new int[size][size];
+        Scanner sc = new Scanner(new File(this.path));
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
-                this.MyCity[i][j] = sc.nextInt();
+                this.CityArray[i][j] = sc.nextInt();
             }
         }
     }
     //public bool road_exists (int id_1, int id_2) {}
-    //public int get_road_length (int id_1, int id_2) {}
+    public int[][] getMap (){
+        return this.CityArray;
+    }
 }
 
 public class Main {
     public static void main(String[] args) throws FileNotFoundException {
         CITY mycity = new CITY(4);
-      /*  for (int i = 0; i< mycity.city_size; i++)
-            for (int j = 0; j< mycity.city_size; j++)
-                System.out.println(mycity.MyCity[i][j]);
-      */
     }
 }
