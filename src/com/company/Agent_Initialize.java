@@ -22,14 +22,7 @@ public class Agent_Initialize extends Agent {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-                //TODO: map = city.getMap
-                int[][] map = new int[][] {
-                        {0, 1, 0, 1, 0},
-                        {1, 0, 1, 0, 0},
-                        {0, 0, 0, 1, 1},
-                        {0, 1, 1, 0, 1},
-                        {0, 0, 1, 0, 0}
-                };
+                int[][] map = city.getMap();
 
                 try {
                     /* Создаём светофоры */
