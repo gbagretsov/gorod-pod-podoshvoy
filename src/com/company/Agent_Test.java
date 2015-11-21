@@ -4,13 +4,14 @@ import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 
 public class Agent_Test extends Agent {
+
+    @Override
     protected void setup() {
         System.out.println("Hello! Name's " + this.getAID().getLocalName());
         Object[] args = this.getArguments();
-        if (args.length != 0) {
-            System.out.println("My arguments are: ");
-            for (int i = 0; i < args.length; ++i) {
-                System.out.println("-" + args[i]);
+        if (args != null && args.length != 0) {
+            for (Object o : args) {
+                System.out.println(o);
             }
         }
         else {
