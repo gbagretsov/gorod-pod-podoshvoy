@@ -35,6 +35,16 @@ public class Agent_Initialize extends Agent {
                                 .createNewAgent("tl_".concat(String.valueOf(i)), "com.company.Agent_TrafficLight", args)
                                 .start();
                     }
+
+                    /* Тест: добавляем машины */
+                    String[] args = new String[] { "tl_4", "tl_2"};
+                    getContainerController()
+                            .createNewAgent("car_0", "com.company.Agent_Car", args)
+                            .start();
+                    getContainerController()
+                            .createNewAgent("car_1", "com.company.Agent_Car", args)
+                            .start();
+
                 } catch (StaleProxyException e) {
                     e.printStackTrace();
                 }
