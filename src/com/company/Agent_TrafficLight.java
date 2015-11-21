@@ -64,7 +64,7 @@ public class Agent_TrafficLight extends Agent {
                 String car = msg.getContent();
                 ((Agent_TrafficLight) getAgent()).putCarLocalNameToQueue(from, car);
                 /* Debug */
-                System.out.println("Debug: my name is " + getAgent().getLocalName()
+                System.out.println("Debug (incoming car from other tl): my name is " + getAgent().getLocalName()
                                  + "; car name is " + car
                                  + "; come from " + from
                                  + "; queue length is " + ((Agent_TrafficLight) getAgent()).getQueueLength(from));
@@ -83,18 +83,29 @@ public class Agent_TrafficLight extends Agent {
             ACLMessage msg = myAgent.receive(newCarTemplate);
             if (msg != null) {
                 String car = msg.getSender().getLocalName();
-                String to = msg.getContent();
-                ACLMessage message = new ACLMessage(ACLMessage.INFORM);
-                message.addReceiver(new AID(to, AID.ISLOCALNAME));
-                message.setOntology("incoming-car");
-                message.setContent(car);
-                send(message);
+                String from = msg.getContent();
+                ((Agent_TrafficLight) getAgent()).putCarLocalNameToQueue(from, car);
+                /* Debug */
+                System.out.println("Debug (new car in town): my name is " + getAgent().getLocalName()
+                        + "; car name is " + car
+                        + "; come from " + from
+                        + "; queue length is " + ((Agent_TrafficLight) getAgent()).getQueueLength(from));
             }
             else {
                 block();
             }
         }
     };
+
+    /**
+     * TODO: Обработка очереди
+     * 1. getCarFromQueue
+     * 2. послать сообщение с онтологией green-light и контентом с информацией об очередях
+     * 3. дождаться ответа
+     * 4. если контент ответа - finish, итерация заканчивается
+     * 5. если указан светофор, оповестить этот светофор о новой машине
+     * 6. взять след. машину ИЛИ перейти к след. дороге
+     * */
 
     private int getQueueLength(String tlLocalName) {
         return cars.get(tlLocalName).size();
