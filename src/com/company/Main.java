@@ -1,8 +1,45 @@
 package com.company;
 
-public class Main {
+import java.io.*;
+import java.util.Scanner;
 
-    public static void main(String[] args) {
-        jade.Boot.main(new String[]{"-gui", "initialize:com.company.Agent_Initialize"});
+class CITY {
+
+    //______ поля _______
+    public int city_size;
+    public int[][] MyCity;
+
+    //_______ конструктор __________
+    public CITY(int size) throws FileNotFoundException {
+
+        this.INPUT (size);
+        this.city_size = size;
+    }
+
+    //___________________ методы _____________________________
+    public void INPUT (int size) throws FileNotFoundException {
+
+        MyCity = new int[size][size];
+        String path = "C://ForFileManager//MAC.txt";
+        Scanner sc = new Scanner(new File(path));
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                this.MyCity[i][j] = sc.nextInt();
+            }
+        }
+    }
+    //public bool road_exists (int id_1, int id_2) {}
+    //public int get_road_length (int id_1, int id_2) {}
+}
+
+public class Main {
+    public static void main(String[] args) throws FileNotFoundException {
+        CITY mycity = new CITY(5);
+        /*for (int i = 0; i< mycity.city_size; i++)
+            for (int j = 0; j< mycity.city_size; j++)
+                System.out.println(mycity.MyCity[i][j]);*/
+        jade.Boot.main(new String[]{"-gui","initializator:com.company.Agent_Initialize"});
     }
 }
