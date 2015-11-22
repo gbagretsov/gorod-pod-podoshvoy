@@ -2,10 +2,10 @@ package com.company;
 
 import java.util.Hashtable;
 public class Algorythm {
-    public static Hashtable<String, Integer> dejkstra (Integer icur,  CITY City){
+    public static Hashtable<String, Integer> dijkstra(Integer icur, CITY City){
 
         // для хранения минимального расстояния
-        Integer[] dejkstra = new Integer[City.city_size] ;
+        Integer[] dijkstra = new Integer[City.city_size] ;
 
         //для проверки посещена ли вершина
         Integer cur = icur;
@@ -13,11 +13,11 @@ public class Algorythm {
 
         // инициализация массивов
         for (boolean b: visited) b = false;
-        for (Integer i = 0; i < City.city_size; i++) dejkstra[i] = -1;
+        for (Integer i = 0; i < City.city_size; i++) dijkstra[i] = -1;
 
         // посетили входную вершину
         visited[icur] = true;
-        dejkstra[icur] = 0;
+        dijkstra[icur] = 0;
 
         for (int i = 0; i< City.city_size; i++) // текущая вершина не совпадает с номером i
         {
@@ -25,9 +25,9 @@ public class Algorythm {
             {
                 if (City.MyCity[cur][j] != 0) {
                     if (!visited[j])
-                        if ((dejkstra[j] >= dejkstra[cur] + 1)) dejkstra[j] = dejkstra[cur]+1;
-                        else if (dejkstra[j] == -1)
-                            dejkstra[j] = dejkstra[cur] + 1;
+                        if ((dijkstra[j] >= dijkstra[cur] + 1)) dijkstra[j] = dijkstra[cur]+1;
+                        else if (dijkstra[j] == -1)
+                            dijkstra[j] = dijkstra[cur] + 1;
                 }
             }
 
@@ -36,15 +36,15 @@ public class Algorythm {
 
             for(int j = 0; j< City.city_size; j++) // просматриваем всю строку
             {
-                if ( (!visited[j]) && ((dejkstra[j] < dejkstra[min])||(min == cur)) && ( dejkstra[j]!= -1)) min = j;
+                if ( (!visited[j]) && ((dijkstra[j] < dijkstra[min])||(min == cur)) && ( dijkstra[j]!= -1)) min = j;
                 cur = min;
             }
         }
 
-        Hashtable<String, Integer> Dejkstra = new Hashtable<String, Integer> (City.city_size);
+        Hashtable<String, Integer> Dijkstra = new Hashtable<String, Integer> (City.city_size);
         for (Integer i=0; i<City.city_size; i++)
-            Dejkstra.put("tl_"+ i.toString(), dejkstra[i]);
+            Dijkstra.put("tl_"+ i.toString(), dijkstra[i]);
 
-        return Dejkstra;
+        return Dijkstra;
     }
 }
