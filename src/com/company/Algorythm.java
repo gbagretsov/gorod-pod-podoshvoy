@@ -49,6 +49,14 @@ public class Algorythm {
 
         return Dijkstra;
     }
+    /*
+       Метод GetNextTL
+       --- icur -> текущая вершина, у которой находится машина
+       --- city -> город
+       --- Traffic_NextTL -> хеш-таблица, с информацией о количестве автомобилей
+                             у соседних светофоров, которая поступает от агентов
+       --- cars_created -> количество агентов автомобилей, которые мы сгенерировали
+    */
     public static String GetNextTL (Integer icur, CITY City, Hashtable<String, Integer> Traffic_NextTL, Integer cars_created){
 
         Integer roads_counter = 0;
