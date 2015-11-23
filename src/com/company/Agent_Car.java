@@ -17,7 +17,7 @@ public class Agent_Car extends Agent {
     private String currentTrafficLight;
     private String finish;
     private ArrayList<String> path;
-
+    private  Object[] args;
     // TODO: хранить время в пути
 
     @Override
@@ -26,7 +26,7 @@ public class Agent_Car extends Agent {
         finish = "tl_0";
 
         /* Въезжаем в город и сообщаем об этом светофору, стоящему в конце исходной дуги */
-        Object[] args = getArguments();
+        args = getArguments();
         ACLMessage message = new ACLMessage(ACLMessage.INFORM);
         message.addReceiver(new AID(args[1].toString(), AID.ISLOCALNAME));
         message.setOntology("coming-to-town");
@@ -95,12 +95,12 @@ public class Agent_Car extends Agent {
         }
 
         private String choosePath(Hashtable<String, Integer> proposals) {
-            // TODO: изменить алгоритм выбора
             // TODO: добавить задержку на две секунды (скорее всего, именно здесь, т.к. алгоритм должен быть автономным)
-            String[] options = proposals.keySet().toArray(new String[0]);
+          /*String[] options = proposals.keySet().toArray(new String[0]);
             int quantity = options.length;
             Random rand = new Random();
-            return options[rand.nextInt(quantity)];
+            return options[rand.nextInt(quantity)]; */
+            return Algorythm.GetNextTL(currentTrafficLight, ((int[][]) ((Agent_Car) myAgent).args[2]), proposals);
         }
 
         private Hashtable<String, Integer> parseTLProposals(String response) {

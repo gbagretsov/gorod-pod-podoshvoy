@@ -34,18 +34,21 @@ public class Agent_Initialize extends Agent {
                         getContainerController()
                                 .createNewAgent("tl_".concat(String.valueOf(i)), "com.company.Agent_TrafficLight", args)
                                 .start();
+
                     }
 
                     /* Добавляем машины
                      * Аргументы: { beginFrom, beginTo } (машина начинает движение с дуги, а не вершины) */
-                    // TODO: передавать карту города
-                    String[] args = new String[] { "tl_4", "tl_2"};
+                    // TODO: написать генерацию входных вершин для авто
+                    Object[] args = new Object[] { "tl_4", "tl_2", city.getMap()};
                     getContainerController()
                             .createNewAgent("car_0", "com.company.Agent_Car", args)
                             .start();
                     getContainerController()
                             .createNewAgent("car_1", "com.company.Agent_Car", args)
                             .start();
+                    Algorythm.cars_created ++;
+                    Algorythm.cars_created ++;
 
                 } catch (StaleProxyException e) {
                     e.printStackTrace();

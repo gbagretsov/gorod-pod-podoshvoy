@@ -21,6 +21,8 @@ public class Agent_TrafficLight extends Agent {
     private String currentQueue;
     private boolean isProseccingACar = false;
 
+
+    // входящее сообщение на запрос услуги
     MessageTemplate cfpTemplate = MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.CFP),
             MessageTemplate.MatchOntology("traffic-lights-contract"));

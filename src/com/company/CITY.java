@@ -11,8 +11,7 @@ class CITY {
     //______ поля _______
     private String path = "C://ForFileManager//MAC.txt";
     public int city_size;
-    public int[][] MyCity = null;
-
+    private int[][] MyCity = null;
     //_______ конструктор __________
     public CITY(int size) throws FileNotFoundException {
 
