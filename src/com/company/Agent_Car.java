@@ -7,6 +7,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Random;
 
@@ -17,7 +18,7 @@ public class Agent_Car extends Agent {
     private String finish;
     private ArrayList<String> path;
     private  Object[] args;
-    // TODO: хранить время в пути
+    private Date startTime;
 
     @Override
     protected void setup() {
@@ -39,6 +40,9 @@ public class Agent_Car extends Agent {
 
         /* Debug output */
         System.out.println("Debug: car " + getLocalName() + " added");
+
+        /* Запоминаем текущее время */
+        startTime = new Date();
 
         addBehaviour(new TrafficLightConversation());
     }
@@ -95,7 +99,12 @@ public class Agent_Car extends Agent {
         }
 
         private String choosePath(Hashtable<String, Integer> proposals) {
-            // TODO: добавить задержку на две секунды (скорее всего, именно здесь, т.к. алгоритм должен быть автономным)
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
           /*String[] options = proposals.keySet().toArray(new String[0]);
             int quantity = options.length;
             Random rand = new Random();
@@ -117,7 +126,7 @@ public class Agent_Car extends Agent {
 
     @Override
     protected void takeDown() {
-        /* По прибытии выводим весь маршрут на печать */
+        /* По прибытии выводим весь маршрут и время поездки на печать */
         String route = "";
         if (currentTrafficLight.equals(finish)) {
             for (String s : path) {
@@ -127,6 +136,10 @@ public class Agent_Car extends Agent {
                 }
             }
         }
-        System.out.println("Car " + getLocalName() + " arrived to its destination " + finish + " by route: " + route);
+        Date arrivalTime = new Date();
+        long tripDuration = arrivalTime.getTime() - startTime.getTime();
+        System.out.println("Car " + getLocalName() +
+                " arrived to its destination " + finish +
+                " in " + tripDuration / 1000 + " seconds by route: " + route);
     }
 }

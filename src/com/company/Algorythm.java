@@ -6,7 +6,6 @@ import java.util.Scanner;
 
 public class Algorythm {
 
-    // для реалистичности нужно добавить по секунде на размышление при каждом методе
     public static Integer cars_created = 0;
     public static Hashtable<String, Integer> dijkstra(Integer icur, int[][] City){
 
