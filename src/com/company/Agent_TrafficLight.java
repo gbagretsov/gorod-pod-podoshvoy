@@ -259,7 +259,7 @@ public class Agent_TrafficLight extends Agent {
     }
 
     /* Получить имя первой машины в очереди tlLocalName
-     * Машина  */
+     * При этом машина покидает очередь */
     private String pollCarFromQueue(String tlLocalName) {
         return cars.get(tlLocalName).pollFirst();
     }
