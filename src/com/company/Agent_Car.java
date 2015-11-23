@@ -11,7 +11,6 @@ import java.util.Hashtable;
 import java.util.Random;
 
 
-// TODO: избавиться от blockingReceive()
 public class Agent_Car extends Agent {
 
     private String currentTrafficLight;
@@ -70,6 +69,7 @@ public class Agent_Car extends Agent {
 
                     /* Ждём предложений от светофоров */
                     template = MessageTemplate.MatchOntology("traffic-lights-contract");
+                    /* В данном случае допустимо использовать blockingReceive(), т.к. поведение единственное */
                     response = myAgent.blockingReceive(template);
 
                     /* Выбираем путь */
