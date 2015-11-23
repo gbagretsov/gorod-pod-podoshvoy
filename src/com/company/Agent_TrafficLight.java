@@ -126,6 +126,8 @@ public class Agent_TrafficLight extends Agent {
             MessageTemplate responseTemplate = MessageTemplate.MatchOntology("green-light");
             ACLMessage response = myAgent.blockingReceive(responseTemplate);
             if (response.getContent().equals("finish")) {
+                currentCar = null;
+                isProseccingACar = false;
                 return;
             }
 
@@ -191,7 +193,8 @@ public class Agent_TrafficLight extends Agent {
                         }
                     } /* end of while block */
 
-                    ((Agent_TrafficLight) getAgent()).isProseccingACar = false;
+                    currentCar = null;
+                    isProseccingACar = false;
                 } /* end of handleAllResponses() */
             }); /* end of addBehaviour() */
         } /* end of action() */
