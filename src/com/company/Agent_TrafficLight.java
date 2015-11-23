@@ -19,7 +19,7 @@ public class Agent_TrafficLight extends Agent {
     private Hashtable<String, LinkedList<String>> cars;
     private List<String> outcoming;
     private String currentQueue;
-    private boolean isProseccingACar = false;
+    private boolean isProcessingACar = false;
 
 
     // входящее сообщение на запрос услуги
@@ -107,7 +107,7 @@ public class Agent_TrafficLight extends Agent {
         public void action() {
 
             /* Выбираем очередную машину */
-            if (isProseccingACar || currentQueue == null) {
+            if (isProcessingACar || currentQueue == null) {
                 return;
             }
             currentCar = ((Agent_TrafficLight) myAgent).pollCarFromQueue(currentQueue);
@@ -115,7 +115,7 @@ public class Agent_TrafficLight extends Agent {
                 return;
             }
 
-            isProseccingACar = true;
+            isProcessingACar = true;
 
             /* Посылаем сообщение машине - "зелёный свет" */
             ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
@@ -129,7 +129,7 @@ public class Agent_TrafficLight extends Agent {
             ACLMessage response = myAgent.blockingReceive(responseTemplate);
             if (response.getContent().equals("finish")) {
                 currentCar = null;
-                isProseccingACar = false;
+                isProcessingACar = false;
                 return;
             }
 
@@ -196,7 +196,7 @@ public class Agent_TrafficLight extends Agent {
                     } /* end of while block */
 
                     currentCar = null;
-                    isProseccingACar = false;
+                    isProcessingACar = false;
                 } /* end of handleAllResponses() */
             }); /* end of addBehaviour() */
         } /* end of action() */
