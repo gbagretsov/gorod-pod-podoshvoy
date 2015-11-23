@@ -118,15 +118,15 @@ public class Agent_Car extends Agent {
     @Override
     protected void takeDown() {
         /* По прибытии выводим весь маршрут на печать */
+        String route = "";
         if (currentTrafficLight.equals(finish)) {
-            System.out.print("Car " + getLocalName() + " arrived to its destination " + finish + " by route: ");
             for (String s : path) {
-                System.out.print(s);
+                route = route.concat(s);
                 if (!s.equals(finish)) {
-                    System.out.print(" -> ");
+                    route = route.concat(" -> ");
                 }
             }
-            System.out.println();
         }
+        System.out.println("Car " + getLocalName() + " arrived to its destination " + finish + " by route: " + route);
     }
 }
