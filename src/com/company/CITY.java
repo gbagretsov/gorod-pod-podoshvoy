@@ -6,6 +6,8 @@ import java.util.Scanner;
 
 class CITY {
 
+    // TODO: возможно, именно здесь стоит хранить количество машин
+
     //______ поля _______
     private String path = "C://ForFileManager//MAC.txt";
     public int city_size;

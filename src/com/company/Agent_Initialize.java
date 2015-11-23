@@ -25,7 +25,7 @@ public class Agent_Initialize extends Agent {
                 int[][] map = city.getMap();
 
                 try {
-                    /* Создаём светофоры */
+                    /* Создаём светофоры. Аргументы: { карта, индекс } */
                     for (int i = 0; i < map.length; i++) {
                         Object[] args = new Object[2];
                         args[0] = map;
@@ -36,7 +36,9 @@ public class Agent_Initialize extends Agent {
                                 .start();
                     }
 
-                    /* Тест: добавляем машины */
+                    /* Добавляем машины
+                     * Аргументы: { beginFrom, beginTo } (машина начинает движение с дуги, а не вершины) */
+                    // TODO: передавать карту города
                     String[] args = new String[] { "tl_4", "tl_2"};
                     getContainerController()
                             .createNewAgent("car_0", "com.company.Agent_Car", args)
