@@ -1,6 +1,7 @@
 package com.company;
 
 import javax.xml.bind.helpers.ParseConversionEventImpl;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Scanner;
 
@@ -55,17 +56,20 @@ public class Algorythm {
     }
     /*
        Метод GetNextTL
-       --- icur -> текущая вершина, у которой находится машина
+       --- i_cur_string -> id светофора, у которого находится агент
        --- city -> город
        --- Traffic_NextTL -> хеш-таблица, с информацией о количестве автомобилей
                              у соседних светофоров, которая поступает от агентов
        --- cars_created -> количество агентов автомобилей, которые мы сгенерировали
     */
-    public static String GetNextTL (String i_cur_string, int[][] City, Hashtable<String, Integer> Traffic_NextTL){
+    public static String GetNextTL (String i_cur_string, int[][] City, Hashtable<String, Integer> Traffic_NextTL,
+                                    ArrayList<String> path, ArrayList<String> cantgohere){
 
+        /* выбираем номер нашего светофора для дейкстры */
         String MyTL = new String(i_cur_string.replaceAll("tl_", ""));
         Integer icur = Integer.parseInt (MyTL);
         Integer roads_counter = 0;
+
         //количество дорог в городе
         for (int i = 0; i< City.length; i++)
             for (int j=0; j<City.length; j++) {
@@ -87,27 +91,97 @@ public class Algorythm {
         Integer max_way = (max_way_1 > max_way_2) ? max_way_1 : max_way_2;
 
         // заполняем таблицу со стоимостью дорог
-
         Hashtable<String, Integer> TL_Price = new Hashtable<String, Integer>();
 
         Integer k;
         String  min_key = "error";
         Integer min_koef = Integer.MAX_VALUE;
 
+
         for (Integer i=0; i<City.length; i++){
-            if ( City[icur][i] > 0) {
+            if (( City[icur][i] > 0)&&(!path.contains("tl_".concat(i.toString())))) {
                 k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + Algorythm.cars_created * Dijkstra.get("tl_".concat(i.toString())) / roads_counter;
-                if ((k < min_koef)&&(Dijkstra.get("tl_".concat(i.toString())) <= max_way)) {
+                if ((k < min_koef)&&(Dijkstra.get("tl_".concat(i.toString())) <= max_way) && (!cantgohere.contains("tl_".concat(i.toString())))) {
                     min_koef = k;
                     min_key = "tl_".concat(i.toString());
                 }
             }
-
                 else k = Integer.MAX_VALUE;
 
             TL_Price.put("tl_".concat(i.toString()), k);
         }
         return  min_key;
+    }
+    public static ArrayList<String> CantGoThere (String current, int[][] City, ArrayList<String> path, Integer finish) {
+        //TODO: ранее запрещенные вершины!!!
+        /* Номер нашего светофора */
+        String MyTL = new String(current.replaceAll("tl_", ""));
+        Integer icur = Integer.parseInt (MyTL);
+
+        /* Загружаем через рекурсию информацию о том, какие вершины уже запрещены на данный момент */
+    /*     if (path.size() !=0 ) {
+            ArrayList<String>  path_old = path;
+            path_old.remove(path.size()-1);
+
+            ArrayList<String> CurrentCantGoThere = CantGoThere(path.get(path.size()-1),City, path_old);
+        }
+        else{
+            ArrayList<String> CurrentCantGoThere = new ArrayList<String>();
+        }
+    */
+
+
+        /* переводим посещенные id в номера */
+        ArrayList<Integer> TL_Number_Path = new ArrayList<Integer> (path.size());
+        String myTL;
+        Integer mycur;
+        for (Integer i = 0; i< path.size(); i++) {
+            myTL = new String(path.get(i).replaceAll("tl_", ""));
+            mycur = Integer.parseInt (myTL);
+            TL_Number_Path.add(mycur);
+        }
+
+        /* теперь удаляем текущую вершину и заполняем таблицу с компонентами связности */
+        /* учитывать будем только те дороги, которые ведут в компоненту с финишной вершиной */
+        /* стартуем с вершин, в которые можно прийти из текущей */
+
+
+        ArrayList<ArrayList<Integer>> Connected_components = new ArrayList<ArrayList<Integer>>();
+
+        Integer jj = 0;
+        //запишем во все списки по одной смежной вершине с исходной
+        for (Integer i=0; i < City.length; i++){
+            if (City[icur][i] != 0) {
+                Connected_components.add(new ArrayList<Integer>());
+                Connected_components.get(jj).add(i);
+                jj++;
+            }
+        }
+
+        //добавляем текущую в список тех, где побывали, чтобы ее игнорировать
+
+           if(!path.contains("tl_".concat(icur.toString())))
+               path.add("tl_".concat(icur.toString()));
+               TL_Number_Path.add(icur);
+
+
+        // совершаем поиск в ширину для каждой из смежных с текущей
+        for(Integer i=0; i<Connected_components.size(); i++)
+        {
+            GoThroughCity OneConnectedComponent= new GoThroughCity(path);
+            OneConnectedComponent.collect_connected(City, Connected_components.get(i).get(0));
+            for (Integer j : OneConnectedComponent.Local_Visited)
+              Connected_components.get(i).add(j);
+        }
+        int Index = 0;
+        ArrayList<String> cant = new ArrayList<String>();
+        for (Integer i = 0; i < Connected_components.size(); i++){
+            if(!Connected_components.get(i).contains(finish))
+                cant.add("tl_".concat(Connected_components.get(i).get(Index).toString()));
+
+        }
+        return  cant;
+
     }
 
 }

@@ -14,14 +14,17 @@ import java.util.Random;
 // TODO: избавиться от blockingReceive()
 public class Agent_Car extends Agent {
 
+    private Hashtable<String, Boolean>  TL_Visited;
     private String currentTrafficLight;
     private String finish;
     private ArrayList<String> path;
+    private ArrayList<String> cant_go_here;
     private  Object[] args;
     // TODO: хранить время в пути
 
     @Override
     protected void setup() {
+
         /* Запоминаем позицию финиша */
         finish = "tl_0";
 
@@ -42,6 +45,9 @@ public class Agent_Car extends Agent {
         System.out.println("Debug: car " + getLocalName() + " added");
 
         addBehaviour(new TrafficLightConversation());
+
+        /*инициализируем список вершин, запрещенных для проезда*/
+        cant_go_here = new ArrayList<String> ();
     }
 
     private class TrafficLightConversation extends CyclicBehaviour {
@@ -75,6 +81,7 @@ public class Agent_Car extends Agent {
                     /* Выбираем путь */
                     String decision = choosePath(parseTLProposals(response.getContent()));
 
+
                     /* Меняем положение */
                     String old = currentTrafficLight;
                     currentTrafficLight = decision;
@@ -82,8 +89,8 @@ public class Agent_Car extends Agent {
                             + " moves from " + old + " to " + currentTrafficLight);
 
                     /* Добавляем светофор в маршрут */
-                    path.add(decision);
-
+                    // path.add(decision);
+                    /* Обновляем список запрещенных вершин*/
                     /* Отправляем ответ */
                     ACLMessage chosenOption = new ACLMessage(ACLMessage.AGREE);
                     chosenOption.setOntology("traffic-lights-contract");
@@ -96,11 +103,9 @@ public class Agent_Car extends Agent {
 
         private String choosePath(Hashtable<String, Integer> proposals) {
             // TODO: добавить задержку на две секунды (скорее всего, именно здесь, т.к. алгоритм должен быть автономным)
-          /*String[] options = proposals.keySet().toArray(new String[0]);
-            int quantity = options.length;
-            Random rand = new Random();
-            return options[rand.nextInt(quantity)]; */
-            return Algorythm.GetNextTL(currentTrafficLight, ((int[][]) ((Agent_Car) myAgent).args[2]), proposals);
+            // TODO: финишный светофор по умолчанию tl_0
+            ArrayList<String> cant = Algorythm.CantGoThere(currentTrafficLight, ((int[][]) ((Agent_Car) myAgent).args[2]), path, 0 );
+            return Algorythm.GetNextTL(currentTrafficLight, ((int[][]) ((Agent_Car) myAgent).args[2]), proposals, path, cant);
         }
 
         private Hashtable<String, Integer> parseTLProposals(String response) {
@@ -119,6 +124,7 @@ public class Agent_Car extends Agent {
     protected void takeDown() {
         /* По прибытии выводим весь маршрут на печать */
         if (currentTrafficLight.equals(finish)) {
+            path.add(finish);
             System.out.print("Car " + getLocalName() + " arrived to its destination " + finish + " by route: ");
             for (String s : path) {
                 System.out.print(s);
