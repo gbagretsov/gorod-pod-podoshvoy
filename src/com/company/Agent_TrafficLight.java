@@ -4,6 +4,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -19,8 +20,7 @@ public class Agent_TrafficLight extends Agent {
         SENDING_GREEN_LIGHT_MESSAGE,
         WAITING_FOR_GREEN_LIGHT_MESSAGE_RESPONSE,
         INITIATING_CONTRACTS_NET,
-        HANDLING_PROPOSALS,
-        WAITING_FOR_PROPOSALS_MESSAGE_RESPONSE
+        HANDLING_PROPOSALS
     }
 
     private Hashtable<String, LinkedList<String>> cars;
@@ -67,8 +67,7 @@ public class Agent_TrafficLight extends Agent {
                 + "; in: "  + incomingString
                 + "; out: " + outcomingString);
 
-        // TODO: изменить длительность цикла светофора (или изменить логику работы в целом)
-        addBehaviour(new QueueSwitchBehaviour(this, 2000));
+        addBehaviour(new QueueSwitchBehaviour(this, 1000));
         addBehaviour(new NewCarsComingToTownHandlerBehaviour());
         addBehaviour(new CarsHandlerBehaviour());
         addBehaviour(new TLRequestsHandler(this, cfpTemplate));
@@ -170,65 +169,61 @@ public class Agent_TrafficLight extends Agent {
 
                         /* В этом методе обрабатываются предложения других светофоров */
 
-                        if (currentState == CarsHandlerState.HANDLING_PROPOSALS) {
-                            String content = "";
+                        String content = "";
 
-                            /* Составляем ответное сообщение для машины.
-                             * Формат сообщения: "имя_светофора1:число1;имя_светофора2:число2;...;имя_светофораN:числоN" */
-                            Enumeration proposals = responses.elements();
-                            while (proposals.hasMoreElements()) {
-                                ACLMessage msg = (ACLMessage) proposals.nextElement();
-                                content = content.concat(msg.getSender().getLocalName()).concat(":")
-                                        .concat(msg.getContent()).concat(";");
-                            }
-                            content = content.substring(0, content.length() - 1);
+                        /* Составляем ответное сообщение для машины.
+                         * Формат сообщения: "имя_светофора1:число1;имя_светофора2:число2;...;имя_светофораN:числоN" */
+                        Enumeration proposals = responses.elements();
+                        while (proposals.hasMoreElements()) {
+                            ACLMessage msg = (ACLMessage) proposals.nextElement();
+                            content = content.concat(msg.getSender().getLocalName()).concat(":")
+                                    .concat(msg.getContent()).concat(";");
+                        }
+                        content = content.substring(0, content.length() - 1);
 
-                            /* Отправляем сообщение машине */
-                            ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-                            message.addReceiver(new AID(currentCar, AID.ISLOCALNAME));
-                            message.setOntology("traffic-lights-contract");
-                            message.setContent(content);
-                            send(message);
+                        /* Отправляем сообщение машине */
+                        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+                        message.addReceiver(new AID(currentCar, AID.ISLOCALNAME));
+                        message.setOntology("traffic-lights-contract");
+                        message.setContent(content);
+                        send(message);
 
-                            currentState = CarsHandlerState.WAITING_FOR_PROPOSALS_MESSAGE_RESPONSE;
-                        };
+                        /* Получаем ответ - решение машины */
+                        MessageTemplate responseTemplate = MessageTemplate.and(
+                                MessageTemplate.MatchOntology("traffic-lights-contract"),
+                                MessageTemplate.MatchPerformative(ACLMessage.AGREE));
 
-                        if (currentState == CarsHandlerState.WAITING_FOR_PROPOSALS_MESSAGE_RESPONSE) {
+                        ACLMessage msg = myAgent.blockingReceive(responseTemplate);
 
-                            /* Получаем ответ - решение машины */
-                            MessageTemplate responseTemplate = MessageTemplate.and(
-                                    MessageTemplate.MatchOntology("traffic-lights-contract"),
-                                    MessageTemplate.MatchPerformative(ACLMessage.AGREE));
-
-                            ACLMessage msg = myAgent.receive(responseTemplate);
-                            while (msg == null) {
-                                block();
-                                msg = myAgent.receive(responseTemplate);
-                            }
-
-                            /* Создаём ответы светофорам - и для подтверждения, и для отказа от услуги */
-                            String chosen = msg.getContent();
-                            Enumeration e = responses.elements();
-                            while (e.hasMoreElements()) {
-                                ACLMessage offer = (ACLMessage) e.nextElement();
-                                if (offer.getPerformative() == ACLMessage.PROPOSE) {
-                                    ACLMessage reply = offer.createReply();
-                                    if (chosen != null && offer.getSender().getLocalName().equals(chosen)) {
-                                        /* В сообщении для выбранного светофора указываем имя машины */
-                                        reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                                        reply.setContent(currentCar);
-                                    } else {
-                                        reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-                                    }
-                                    acceptances.addElement(reply);
+                        /* Создаём ответы светофорам - и для подтверждения, и для отказа от услуги */
+                        String chosen = msg.getContent();
+                        Enumeration e = responses.elements();
+                        while (e.hasMoreElements()) {
+                            ACLMessage offer = (ACLMessage) e.nextElement();
+                            if (offer.getPerformative() == ACLMessage.PROPOSE) {
+                                ACLMessage reply = offer.createReply();
+                                if (chosen != null && offer.getSender().getLocalName().equals(chosen)) {
+                                    /* В сообщении для выбранного светофора указываем имя машины */
+                                    reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                                    reply.setContent(currentCar);
+                                } else {
+                                    reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
                                 }
-                            } /* end of while block */
+                                acceptances.addElement(reply);
+                            }
+                        } /* end of while block */
 
-                            currentCar = null;
-                            currentState = CarsHandlerState.SENDING_GREEN_LIGHT_MESSAGE;
-                        } /* end of (currentState == CarsHandlerState.WAITING_FOR_PROPOSALS_MESSAGE_RESPONSE) */
+
+                        addBehaviour(new WakerBehaviour(myAgent, 2000) {
+                            @Override
+                            protected void onWake() {
+                                super.onWake();
+                                currentCar = null;
+                                currentState = CarsHandlerState.SENDING_GREEN_LIGHT_MESSAGE;
+                            }
+                        }); /* end of WakerBehaviour */
                     } /* end of handleAllResponses() */
-                }); /* end of addBehaviour() */
+                }); /* end of addBehaviour(ContractNetInitiator) */
             } /* end of (currentState == CarsHandlerState.INITIATING_CONTRACTS_NET) */
         } /* end of action() */
     } /* end of CarsHandlerBehaviour */
@@ -261,28 +256,44 @@ public class Agent_TrafficLight extends Agent {
         }
     }
 
-    // TODO: изменить алгоритм переключения
     private class QueueSwitchBehaviour extends TickerBehaviour {
 
         /* queuesList - список имён светофоров
-         * i - индекс текущего светофора (т. е. часть имени без "tl_") */
+         * i - индекс текущего светофора (т. е. часть имени без "tl_")
+         * iterationsPassedSinceLastSwitch - время последнего переключения светофора */
         String[] queuesList = cars.keySet().toArray(new String[0]);
-        int i = -1;
+        int i = 0;
+        int iterationsPassedSinceLastSwitch = 0;
 
         /* period - интервал в миллисекундах, через который циклически будет выполняться метод onTick() */
         public QueueSwitchBehaviour(Agent a, long period) {
             super(a, period);
+            System.out.println("Debug: current time is " + new Date());
         }
 
         @Override
         protected void onTick() {
-            /* Выбираем следующий светофор; если дошли до конца списка - начинаем сначала */
-            if (++i >= queuesList.length) {
-                i = 0;
+            if (currentQueue == null) {
+                currentQueue = queuesList[0];
+                return;
             }
-            currentQueue = queuesList[i];
-            System.out.println("Debug: " + myAgent.getLocalName() + " changed to "
-                    + currentQueue + " handling at " + new Date());
+
+            iterationsPassedSinceLastSwitch++;
+
+            /* Если в очереди нет машин ИЛИ переключались более 30 секунд назад */
+            if (getQueueLength(currentQueue) == 0 || iterationsPassedSinceLastSwitch >= 30) {
+                /* Выбираем следующий светофор; если дошли до конца списка - начинаем сначала */
+                if (++i >= queuesList.length) {
+                    i = 0;
+                }
+
+                /* Сбрасываем счётчик итераций */
+                iterationsPassedSinceLastSwitch = 0;
+
+                currentQueue = queuesList[i];
+                System.out.println("Debug: " + myAgent.getLocalName() + " changed to "
+                        + currentQueue + " handling at " + new Date());
+            }
         }
     }
 

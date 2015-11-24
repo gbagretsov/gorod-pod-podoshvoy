@@ -94,17 +94,19 @@ public class Agent_Car extends Agent {
                     chosenOption.setContent(decision);
                     chosenOption.addReceiver(new AID(response.getSender().getLocalName(), AID.ISLOCALNAME));
                     send(chosenOption);
+
+                    /* Имитируем поворот */
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
                 }
             }
         }
 
         private String choosePath(Hashtable<String, Integer> proposals) {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
           /*String[] options = proposals.keySet().toArray(new String[0]);
             int quantity = options.length;
             Random rand = new Random();
