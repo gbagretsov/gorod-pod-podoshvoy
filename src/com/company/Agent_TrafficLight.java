@@ -157,7 +157,7 @@ public class Agent_TrafficLight extends Agent {
                 msg.setOntology("traffic-lights-contract");
                 /* Мы хотим получить ответ в течение секунды */
                 // TODO: уточнить срок получения ответа в сети контрактов
-                msg.setReplyByDate(new Date(System.currentTimeMillis() + 1000));
+                msg.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
                 msg.setContent("queue-length");
 
                 currentState = CarsHandlerState.HANDLING_PROPOSALS;
@@ -178,6 +178,9 @@ public class Agent_TrafficLight extends Agent {
                             ACLMessage msg = (ACLMessage) proposals.nextElement();
                             content = content.concat(msg.getSender().getLocalName()).concat(":")
                                     .concat(msg.getContent()).concat(";");
+                        }
+                        if (content == "") {
+                            int k = 0;
                         }
                         content = content.substring(0, content.length() - 1);
 
@@ -268,7 +271,7 @@ public class Agent_TrafficLight extends Agent {
         /* period - интервал в миллисекундах, через который циклически будет выполняться метод onTick() */
         public QueueSwitchBehaviour(Agent a, long period) {
             super(a, period);
-            System.out.println("Debug: current time is " + new Date());
+            /*System.out.println("Debug: current time is " + new Date());*/
         }
 
         @Override
@@ -291,8 +294,8 @@ public class Agent_TrafficLight extends Agent {
                 iterationsPassedSinceLastSwitch = 0;
 
                 currentQueue = queuesList[i];
-                System.out.println("Debug: " + myAgent.getLocalName() + " changed to "
-                        + currentQueue + " handling at " + new Date());
+                /*System.out.println("Debug: " + myAgent.getLocalName() + " changed to "
+                        + currentQueue + " handling at " + new Date());*/
             }
         }
     }
@@ -310,6 +313,9 @@ public class Agent_TrafficLight extends Agent {
 
     /* Поместить машину carLocalName в очередь от светофора tlLocalNeme */
     private void putCarToQueue(String tlLocalName, String carLocalName) {
+        if (tlLocalName == null || carLocalName == null) {
+            int k = 0;
+        }
         cars.get(tlLocalName).addLast(carLocalName);
     }
 

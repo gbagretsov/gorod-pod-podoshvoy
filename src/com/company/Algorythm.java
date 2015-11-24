@@ -75,18 +75,26 @@ public class Algorythm {
                 roads_counter += City[i][j];
             }
         Hashtable<String, Integer> Dijkstra = dijkstra(icur, City);
-        Integer min_way = Dijkstra.get("tl_0");
+        Integer min_way;
+
+      //  if( Dijkstra.get("tl_0")>= 0)
+        //min_way = Dijkstra.get("tl_0");
+         min_way = 0;
 
         // подсчет минимального маршрута
+        // просматриваем путь от смежных до финиша
         for (Integer i=1; i< City.length; i++) {
-            Integer dijkstra_i = Dijkstra.get("tl_".concat(i.toString()));
-            if ((dijkstra_i < min_way)&&(dijkstra_i != 0))
-                min_way = dijkstra_i;
+            if(City[icur][i] > 0) {
+                Dijkstra = dijkstra(i, City);
+              Integer dijkstra_i = Dijkstra.get("tl_0")+1;
+              if ((dijkstra_i < min_way)||(min_way == 0))
+                  min_way = dijkstra_i;
+            }
         }
 
         // маршрут максимальной длины, который можно использовать
         Integer max_way_1 = min_way + 3;
-        Integer max_way_2 = min_way + City.length/10;
+        Integer max_way_2 = min_way + City.length/6;
         Integer max_way = (max_way_1 > max_way_2) ? max_way_1 : max_way_2;
 
         // заполняем таблицу со стоимостью дорог
@@ -97,9 +105,10 @@ public class Algorythm {
         Integer min_koef = Integer.MAX_VALUE;
 
 
+        Dijkstra = dijkstra(icur, City);
         for (Integer i=0; i<City.length; i++){
-            if (( City[icur][i] > 0)&&(!path.contains("tl_".concat(i.toString())))) {
-                k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + Algorythm.cars_created * Dijkstra.get("tl_".concat(i.toString())) / roads_counter;
+            if (( City[icur][i] > 0)&&(!path.contains("tl_".concat(i.toString()))) && (Dijkstra.get("tl_0") <= max_way)) {
+                k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + Dijkstra.get("tl_0")*3 ;
                 if ((k < min_koef)&&(Dijkstra.get("tl_".concat(i.toString())) <= max_way) && (!cantgohere.contains("tl_".concat(i.toString())))) {
                     min_koef = k;
                     min_key = "tl_".concat(i.toString());

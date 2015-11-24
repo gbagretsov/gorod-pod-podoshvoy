@@ -103,6 +103,7 @@ public class Agent_Car extends Agent {
                     send(chosenOption);
 
                     /* Имитируем поворот */
+                    if (path.size()>1)
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException e) {
