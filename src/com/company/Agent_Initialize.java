@@ -19,11 +19,11 @@ public class Agent_Initialize extends Agent {
             public void action() {
                 /* Создаём город */
                 try {
-                    city = new CITY(27);
+                    city = new CITY();
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-                int[][] map = city.getMap();
+                Integer[][] map = city.getMap();
 
                 try {
                     /* Создаём светофоры. Аргументы: { карта, индекс } */

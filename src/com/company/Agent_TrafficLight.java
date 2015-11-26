@@ -36,7 +36,7 @@ public class Agent_TrafficLight extends Agent {
     protected void setup() {
 
         Object[] args = getArguments();
-        int[][] map = (int[][]) args[0];
+        Integer[][] map = (Integer[][]) args[0];
         int index = Integer.parseInt(args[1].toString());
 
         /* Создаём очереди входящих */

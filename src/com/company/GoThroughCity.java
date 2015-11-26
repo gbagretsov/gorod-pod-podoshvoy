@@ -14,7 +14,7 @@ public class GoThroughCity {
             //this.CantGoThere = CantGoThere;
             this.path = path;
         }
-        public void collect_connected (int[][] City, Integer current) {
+        public void collect_connected (Integer[][] City, Integer current) {
             for (Integer i = 0; i < City.length; i++)
                 if ((City[current][i] != 0) && (!Local_Visited.contains(i)) && (!path.contains("tl_".concat(i.toString())))) {
                     Local_Visited.add(current);

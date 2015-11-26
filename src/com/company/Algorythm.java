@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Algorythm {
 
     public static Integer cars_created = 0;
-    public static Hashtable<String, Integer> dijkstra(Integer icur, int[][] City){
+    public static Hashtable<String, Integer> dijkstra(Integer icur, Integer[][] City){
 
         // для хранения минимального расстояния
         Integer[] dijkstra = new Integer[City.length] ;
@@ -61,7 +61,7 @@ public class Algorythm {
                              у соседних светофоров, которая поступает от агентов
        --- cars_created -> количество агентов автомобилей, которые мы сгенерировали
     */
-    public static String GetNextTL (String i_cur_string, int[][] City, Hashtable<String, Integer> Traffic_NextTL,
+    public static String GetNextTL (String i_cur_string, Integer[][] City, Hashtable<String, Integer> Traffic_NextTL,
                                     ArrayList<String> path, ArrayList<String> cantgohere){
 
         /* выбираем номер нашего светофора для дейкстры */
@@ -120,7 +120,7 @@ public class Algorythm {
         }
         return  min_key;
     }
-    public static ArrayList<String> CantGoThere (String current, int[][] City, ArrayList<String> path, Integer finish) {
+    public static ArrayList<String> CantGoThere (String current, Integer[][] City, ArrayList<String> path, Integer finish) {
         /* Номер нашего светофора */
         String MyTL = new String(current.replaceAll("tl_", ""));
         Integer icur = Integer.parseInt (MyTL);
