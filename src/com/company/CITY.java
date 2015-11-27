@@ -8,7 +8,7 @@ import java.util.Scanner;
 class CITY {
 
     //______ поля _______
-    private String path = "C://ForFileManager//MAC.txt";
+    private String path = "matrix.txt";
     private Integer[][] MyCity = null;
     //_______ конструктор __________
     public CITY(String path) throws FileNotFoundException {
