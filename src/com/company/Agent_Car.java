@@ -42,7 +42,7 @@ public class Agent_Car extends Agent {
         path.add(currentTrafficLight);
 
         /* Debug output */
-        System.out.println("Debug: car " + getLocalName() + " added");
+        /*System.out.println("Debug: car " + getLocalName() + " added");*/
 
         /* Запоминаем текущее время */
         startTime = new Date();
@@ -89,8 +89,8 @@ public class Agent_Car extends Agent {
                     /* Меняем положение */
                     String old = currentTrafficLight;
                     currentTrafficLight = decision;
-                    System.out.println("Debug: car " + getAgent().getLocalName()
-                            + " moves from " + old + " to " + currentTrafficLight);
+                    /*System.out.println("Debug: car " + getAgent().getLocalName()
+                            + " moves from " + old + " to " + currentTrafficLight);*/
 
                     /* Добавляем светофор в маршрут */
                     // path.add(decision);

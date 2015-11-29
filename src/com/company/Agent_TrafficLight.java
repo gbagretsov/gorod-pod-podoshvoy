@@ -63,9 +63,9 @@ public class Agent_TrafficLight extends Agent {
         for (String s : outcoming) {
             outcomingString = outcomingString.concat(s + " ");
         }
-        System.out.println("Debug: " + getAID().getLocalName()
+        /*System.out.println("Debug: " + getAID().getLocalName()
                 + "; in: "  + incomingString
-                + "; out: " + outcomingString);
+                + "; out: " + outcomingString);*/
 
         addBehaviour(new QueueSwitchBehaviour(this, 1000));
         addBehaviour(new NewCarsComingToTownHandlerBehaviour());
