@@ -25,9 +25,6 @@ public class Agent_Car extends Agent {
     @Override
     protected void setup()  {
 
-        /* Запоминаем позицию финиша */
-        finish = "tl_0";
-
         /* Въезжаем в город и сообщаем об этом светофору, стоящему в конце исходной дуги */
         args = getArguments();
         ACLMessage message = new ACLMessage(ACLMessage.INFORM);
@@ -36,6 +33,9 @@ public class Agent_Car extends Agent {
         message.setContent(args[0].toString());
         send(message);
         currentTrafficLight = args[1].toString();
+
+        /* Запоминаем позицию финиша */
+        finish = args[3].toString();
 
         /* Инициализация маршрута */
         path = new ArrayList<String>();
@@ -116,7 +116,8 @@ public class Agent_Car extends Agent {
 
         private String choosePath(Hashtable<String, Integer> proposals) {
             // TODO: финишный светофор по умолчанию tl_0
-            ArrayList<String> cant = Algorythm.CantGoThere(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), path, 0 );
+            Integer i = Integer.valueOf(finish.replace("tl_", ""));
+            ArrayList<String> cant = Algorythm.CantGoThere(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), path, i );
             return Algorythm.GetNextTL(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), proposals, path, cant);
         }
 

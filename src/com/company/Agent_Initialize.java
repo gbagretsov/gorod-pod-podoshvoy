@@ -6,6 +6,7 @@ import jade.wrapper.StaleProxyException;
 
 import javax.swing.*;
 import java.io.FileNotFoundException;
+import java.util.Random;
 
 public class Agent_Initialize extends Agent {
 
@@ -39,55 +40,44 @@ public class Agent_Initialize extends Agent {
                     }
 
                     /* Добавляем машины
-                     * Аргументы: { beginFrom, beginTo } (машина начинает движение с дуги, а не вершины) */
-                    // TODO: написать генерацию входных вершин для авто
+                     * Аргументы: { beginFrom, beginTo, map, finish } */
 
-                    Object[] args__0 = new Object[] { "tl_6", "tl_7", city.getMap()};
-                    Object[] args__1 = new Object[] { "tl_6", "tl_7", city.getMap()};
-                    Object[] args__2 = new Object[] { "tl_25", "tl_10", city.getMap()};
-                    Object[] args__3 = new Object[] { "tl_24", "tl_23", city.getMap()};
-                    Object[] args__4 = new Object[] { "tl_24", "tl_25", city.getMap()};
+                    /* Случайная генерация */
+                    /*for (int i = 0; i < 10; i++) {
+                        Object[] args = new Object[4];
+                        Random random = new Random();
+                        int from, to, finish;
+                        do {
+                            from = random.nextInt(city.getMap().length);
+                            to = random.nextInt(city.getMap().length);
+                            finish = random.nextInt(city.getMap().length);
+                        } while (map[from][to] != 1 || to == 0 || finish == to);
+                        args[0] = "tl_".concat(String.valueOf(from));
+                        args[1] = "tl_".concat(String.valueOf(to));
+                        args[2] = city.getMap();
+                        args[3] = "tl_".concat(String.valueOf(finish));
+                        getContainerController()
+                                .createNewAgent("car_".concat(String.valueOf(i)), "com.company.Agent_Car", args)
+                                .start();
+                    } */
 
-                    Integer current_args = 0;
-                    for(Integer i = 0; i< 200; i++) {
-                        if (current_args == 0) {
-                            getContainerController()
-                                    .createNewAgent("car_".concat(i.toString()), "com.company.Agent_Car", args__0 )
-                                    .start();
-                        current_args++;
-                        }
-                        else if (current_args == 1) {
-                            getContainerController()
-                                    .createNewAgent("car_".concat(i.toString()), "com.company.Agent_Car", args__1 )
-                                    .start();
-                             current_args++;
-                        }
-                        else if (current_args == 2) {
-                            getContainerController()
-                                    .createNewAgent("car_".concat(i.toString()), "com.company.Agent_Car", args__2 )
-                                    .start();
-                            current_args++;
-                        }
-                        else if (current_args == 3) {
-                            getContainerController()
-                                    .createNewAgent("car_".concat(i.toString()), "com.company.Agent_Car", args__3 )
-                                    .start();
-                            current_args++;
-                        }
-                        else if (current_args == 4) {
-                            getContainerController()
-                                    .createNewAgent("car_".concat(i.toString()), "com.company.Agent_Car", args__4 )
-                                    .start();
-                            current_args++;
-                        }
-                        else if (current_args == 5) {current_args = 0;}
+                    /* Тестовая генерация */
+                    for (int i = 0; i < 10; i++) {
+                        Object[] args = new Object[4];
+                        args[0] = "tl_2";
+                        args[1] = "tl_0";
+                        args[2] = city.getMap();
+                        args[3] = "tl_19";
+                        getContainerController()
+                                .createNewAgent("car_".concat(String.valueOf(i)), "com.company.Agent_Car", args)
+                                .start();
                     }
-                    Algorythm.cars_created += 200;
-                    //Algorythm.cars_created ++;
 
                 } catch (StaleProxyException e) {
                     e.printStackTrace();
                 }
+
+
             }
 
         } );
