@@ -115,10 +115,9 @@ public class Agent_Car extends Agent {
         }
 
         private String choosePath(Hashtable<String, Integer> proposals) {
-            // TODO: финишный светофор по умолчанию tl_0
             Integer i = Integer.valueOf(finish.replace("tl_", ""));
             ArrayList<String> cant = Algorythm.CantGoThere(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), path, i );
-            return Algorythm.GetNextTL(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), proposals, path, cant);
+            return Algorythm.GetNextTL(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), proposals, path, cant, i);
         }
 
         private Hashtable<String, Integer> parseTLProposals(String response) {

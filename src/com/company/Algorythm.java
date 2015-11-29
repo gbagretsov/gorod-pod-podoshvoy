@@ -62,7 +62,7 @@ public class Algorythm {
        --- cars_created -> количество агентов автомобилей, которые мы сгенерировали
     */
     public static String GetNextTL (String i_cur_string, Integer[][] City, Hashtable<String, Integer> Traffic_NextTL,
-                                    ArrayList<String> path, ArrayList<String> cantgohere){
+                                    ArrayList<String> path, ArrayList<String> cantgohere, Integer finish){
 
         /* выбираем номер нашего светофора для дейкстры */
         String MyTL = new String(i_cur_string.replaceAll("tl_", ""));
@@ -86,7 +86,7 @@ public class Algorythm {
         for (Integer i=1; i< City.length; i++) {
             if(City[icur][i] > 0) {
                 Dijkstra = dijkstra(i, City);
-              Integer dijkstra_i = Dijkstra.get("tl_0")+1;
+              Integer dijkstra_i = Dijkstra.get("tl_".concat(finish.toString()))+1;
               if ((dijkstra_i < min_way)||(min_way == 0))
                   min_way = dijkstra_i;
             }
@@ -107,9 +107,11 @@ public class Algorythm {
 
         Dijkstra = dijkstra(icur, City);
         for (Integer i=0; i<City.length; i++){
-            if (( City[icur][i] > 0)&&(!path.contains("tl_".concat(i.toString()))) && (Dijkstra.get("tl_0") <= max_way)) {
-                k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + Dijkstra.get("tl_0")*3 ;
-                if ((k < min_koef)&&(Dijkstra.get("tl_".concat(i.toString())) <= max_way) && (!cantgohere.contains("tl_".concat(i.toString())))) {
+                Dijkstra = dijkstra(i, City);
+                if (( City[icur][i] > 0)&&(!path.contains("tl_".concat(i.toString()))) && ((Dijkstra.get("tl_".concat(finish.toString()))+1) <= max_way)) {
+                k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + (Dijkstra.get("tl_".concat(finish.toString()))+1)*3 ;
+                if ((k < min_koef)
+                        &&(!cantgohere.contains("tl_".concat(i.toString())))) {
                     min_koef = k;
                     min_key = "tl_".concat(i.toString());
                 }
@@ -169,16 +171,17 @@ public class Algorythm {
 
            if(!path.contains("tl_".concat(icur.toString())))
                path.add("tl_".concat(icur.toString()));
-               TL_Number_Path.add(icur);
+            if (!TL_Number_Path.contains(icur))  TL_Number_Path.add(icur);
 
 
         // совершаем поиск в ширину для каждой из смежных с текущей
         for(Integer i=0; i<Connected_components.size(); i++)
         {
             GoThroughCity OneConnectedComponent= new GoThroughCity(path);
-            OneConnectedComponent.collect_connected(City, Connected_components.get(i).get(0));
+            for (Integer x = 0; x < GoThroughCity.adjacent_counter (City, i); x++)
+              OneConnectedComponent.collect_connected(City, Connected_components.get(i).get(0));
             for (Integer j : OneConnectedComponent.Local_Visited)
-              Connected_components.get(i).add(j);
+                  Connected_components.get(i).add(j);
         }
         int Index = 0;
         ArrayList<String> cant = new ArrayList<String>();
