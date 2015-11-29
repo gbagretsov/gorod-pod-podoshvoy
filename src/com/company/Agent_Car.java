@@ -26,7 +26,7 @@ public class Agent_Car extends Agent {
     protected void setup()  {
 
         /* Запоминаем позицию финиша */
-        finish = "tl_0";
+        finish = "tl_18";
 
         /* Въезжаем в город и сообщаем об этом светофору, стоящему в конце исходной дуги */
         args = getArguments();
@@ -116,7 +116,7 @@ public class Agent_Car extends Agent {
 
         private String choosePath(Hashtable<String, Integer> proposals) {
             // TODO: финишный светофор по умолчанию tl_0
-            ArrayList<String> cant = Algorythm.CantGoThere(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), path, 0 );
+            ArrayList<String> cant = Algorythm.CantGoThere(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), path, 18 );
             return Algorythm.GetNextTL(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), proposals, path, cant);
         }
 

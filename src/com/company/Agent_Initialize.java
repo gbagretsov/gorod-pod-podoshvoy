@@ -42,11 +42,11 @@ public class Agent_Initialize extends Agent {
                      * Аргументы: { beginFrom, beginTo } (машина начинает движение с дуги, а не вершины) */
                     // TODO: написать генерацию входных вершин для авто
 
-                    Object[] args__0 = new Object[] { "tl_6", "tl_7", city.getMap()};
-                    Object[] args__1 = new Object[] { "tl_6", "tl_7", city.getMap()};
-                    Object[] args__2 = new Object[] { "tl_25", "tl_10", city.getMap()};
-                    Object[] args__3 = new Object[] { "tl_24", "tl_23", city.getMap()};
-                    Object[] args__4 = new Object[] { "tl_24", "tl_25", city.getMap()};
+                    Object[] args__0 = new Object[] { "tl_2", "tl_0", city.getMap()};
+                    Object[] args__1 = new Object[] { "tl_2", "tl_0", city.getMap()};
+                    Object[] args__2 = new Object[] { "tl_2", "tl_0", city.getMap()};
+                    Object[] args__3 = new Object[] { "tl_2", "tl_0", city.getMap()};
+                    Object[] args__4 = new Object[] { "tl_2", "tl_0", city.getMap()};
 
                     Integer current_args = 0;
                     for(Integer i = 0; i< 200; i++) {
@@ -83,7 +83,7 @@ public class Agent_Initialize extends Agent {
                         else if (current_args == 5) {current_args = 0;}
                     }
                     Algorythm.cars_created += 200;
-                    //Algorythm.cars_created ++;
+
 
                 } catch (StaleProxyException e) {
                     e.printStackTrace();
