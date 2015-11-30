@@ -7,6 +7,21 @@ import java.util.Scanner;
 
 public class Algorythm {
 
+    /*
+    Метод dijkstra
+       на входе имеем номер текущей вершины, у которой стоим в очереди
+       на выходе получаем хеш-таблицу расстояний от текущей вершины до каждого из светофоров
+    */
+    /*
+     Метод GetNextTL
+     --- i_cur_string -> id светофора, у которого находится агент
+     --- city -> город
+     --- Traffic_NextTL -> хеш-таблица, с информацией о количестве автомобилей
+                           у соседних светофоров, которая поступает от агентов
+     --- cars_created -> количество агентов автомобилей, которые мы сгенерировали
+  */
+
+
     public static Integer cars_created = 0;
     public static Hashtable<String, Integer> dijkstra(Integer icur, Integer[][] City){
 
@@ -18,8 +33,8 @@ public class Algorythm {
         boolean[] visited = new boolean[City.length];
 
         // инициализация массивов
-        for (boolean b: visited) b = false;
-        for (Integer i = 0; i < City.length; i++) dijkstra[i] = -1;
+        for (Integer i = 0; i < City.length; i++) visited[i] = false;
+        for (Integer i = 0; i < City.length; i++) dijkstra[i] = Integer.MAX_VALUE;
 
         // посетили входную вершину
         visited[icur] = true;
@@ -32,8 +47,6 @@ public class Algorythm {
                 if (City [cur][j] != 0) {
                     if (!visited[j])
                         if ((dijkstra[j] >= dijkstra[cur] + 1)) dijkstra[j] = dijkstra[cur]+1;
-                        else if (dijkstra[j] == -1)
-                            dijkstra[j] = dijkstra[cur] + 1;
                 }
             }
 
@@ -42,8 +55,8 @@ public class Algorythm {
 
             for(int j = 0; j< City.length; j++) // просматриваем всю строку
             {
-                if ( (!visited[ j]) && ((dijkstra[j] < dijkstra[min])||(min == cur)) && ( dijkstra[j]!= -1)) min = j;
-                cur = min;
+                if ((!visited[ j]) && ((dijkstra[j] < dijkstra[cur])||(dijkstra[cur]==0)||(visited[cur])) && (dijkstra[j]< Integer.MAX_VALUE))
+                    cur = j;
             }
         }
 
@@ -53,14 +66,6 @@ public class Algorythm {
 
         return Dijkstra;
     }
-    /*
-       Метод GetNextTL
-       --- i_cur_string -> id светофора, у которого находится агент
-       --- city -> город
-       --- Traffic_NextTL -> хеш-таблица, с информацией о количестве автомобилей
-                             у соседних светофоров, которая поступает от агентов
-       --- cars_created -> количество агентов автомобилей, которые мы сгенерировали
-    */
     public static String GetNextTL (String i_cur_string, Integer[][] City, Hashtable<String, Integer> Traffic_NextTL,
                                     ArrayList<String> path, ArrayList<String> cantgohere, Integer finish){
 
@@ -76,10 +81,7 @@ public class Algorythm {
             }
         Hashtable<String, Integer> Dijkstra = dijkstra(icur, City);
         Integer min_way;
-
-      //  if( Dijkstra.get("tl_0")>= 0)
-        //min_way = Dijkstra.get("tl_0");
-         min_way = 0;
+        min_way = 0;
 
         // подсчет минимального маршрута
         // просматриваем путь от смежных до финиша
@@ -127,17 +129,6 @@ public class Algorythm {
         String MyTL = new String(current.replaceAll("tl_", ""));
         Integer icur = Integer.parseInt (MyTL);
 
-        /* Загружаем через рекурсию информацию о том, какие вершины уже запрещены на данный момент */
-    /*     if (path.size() !=0 ) {
-            ArrayList<String>  path_old = path;
-            path_old.remove(path.size()-1);
-
-            ArrayList<String> CurrentCantGoThere = CantGoThere(path.get(path.size()-1),City, path_old);
-        }
-        else{
-            ArrayList<String> CurrentCantGoThere = new ArrayList<String>();
-        }
-    */
 
 
         /* переводим посещенные id в номера */
