@@ -10,6 +10,10 @@ class CITY {
     //______ поля _______
     private String path = "matrix.txt";
     private Integer[][] MyCity = null;
+
+    // глобальный счётчик id
+    private static int currentID = 0;
+
     //_______ конструктор __________
     public CITY(String path) throws FileNotFoundException {
         this.path = path;
@@ -43,6 +47,10 @@ class CITY {
     //public bool road_exists (int id_1, int id_2) {}
     public Integer[][] getMap (){
         return this.MyCity;
+    }
+
+    public static int getNextID() {
+        return ++currentID;
     }
 }
 

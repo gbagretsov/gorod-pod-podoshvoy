@@ -3,34 +3,37 @@ package com.company;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.ReceiverBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.core.behaviours.WakerBehaviour;
-import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.proto.ContractNetInitiator;
 import jade.proto.ContractNetResponder;
 
 import java.util.*;
 
-
+// TODO: судя по дебаггеру, агент слишком долго сидит в поведениях QueueSwitch и Sequential
 public class Agent_TrafficLight extends Agent {
-
-    private enum CarsHandlerState {
-        SENDING_GREEN_LIGHT_MESSAGE,
-        WAITING_FOR_GREEN_LIGHT_MESSAGE_RESPONSE,
-        INITIATING_CONTRACTS_NET,
-        HANDLING_PROPOSALS
-    }
 
     private Hashtable<String, LinkedList<String>> cars;
     private List<String> outcoming;
     private String currentQueue;
+    private String currentCar;
 
-    // Шаблон входящих сообщений на запрос услуги
+    SequentialBehaviour sequentialBehaviour;
+    ReceiverBehaviour.Handle receiverHandler;
+    ReceiverBehaviour greenLightReceiver;
+
+    /* Шаблоны входящих сообщений:
+     * 1. запрос услуги
+     * 2. ответ на сообщение "зелёный свет"
+     * 3. сообщение о новой машине */
     MessageTemplate cfpTemplate = MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.CFP),
             MessageTemplate.MatchOntology("traffic-lights-contract"));
+    MessageTemplate greenLightTemplate = MessageTemplate.MatchOntology("green-light");
+    MessageTemplate newCarTemplate = MessageTemplate.MatchOntology("coming-to-town");
 
     @Override
     protected void setup() {
@@ -67,18 +70,24 @@ public class Agent_TrafficLight extends Agent {
                 + "; in: "  + incomingString
                 + "; out: " + outcomingString);*/
 
-        addBehaviour(new QueueSwitchBehaviour(this, 1000));
-        addBehaviour(new NewCarsComingToTownHandlerBehaviour());
-        addBehaviour(new CarsHandlerBehaviour());
-        addBehaviour(new TLRequestsHandler(this, cfpTemplate));
+        if (cars.keySet().size() > 0) {
+
+            addBehaviour(new QueueSwitchBehaviour(this, 1000));
+            addBehaviour(new NewCarsComingToTownHandlerBehaviour());
+            addBehaviour(new CarRequestsHandler(this, cfpTemplate));
+
+            /* Инициализация и запуск последовательных поведений, связанных с обработкой машин в очереди */
+            receiverHandler = ReceiverBehaviour.newHandle();
+            sequentialBehaviour = new SequentialBehaviour(this);
+            sequentialBehaviour.addSubBehaviour(new GreenLightSender());
+            addBehaviour(sequentialBehaviour);
+        }
     }
 
     private class NewCarsComingToTownHandlerBehaviour extends CyclicBehaviour {
 
-        /* Только что созданная машина сама сообщает светофору, что она въезжает в город.
+        /* Только что созданная машина сообщает светофору, что она въезжает в город.
          * В этом поведении происходит обработка таких сообщений */
-
-        MessageTemplate newCarTemplate = MessageTemplate.MatchOntology("coming-to-town");
 
         @Override
         public void action() {
@@ -98,149 +107,88 @@ public class Agent_TrafficLight extends Agent {
         }
     };
 
-    private class CarsHandlerBehaviour extends CyclicBehaviour {
+    private class GreenLightSender extends CyclicBehaviour {
 
         /* Обработка машин в очереди.
-         * Текущая очередь записана в поле currentQueue и меняется в другом поведении.
-         * В сети контрактов данный светофор по сути является посредником между машиной и другими светофорами
-         * (т. к. в нашей модели машина имеет доступ только к светофору, на котором она находится)*/
-
-        String currentCar;
-        CarsHandlerState currentState = CarsHandlerState.SENDING_GREEN_LIGHT_MESSAGE;
+         * Текущая очередь записана в поле currentQueue и меняется в другом поведении. */
 
         @Override
         public void action() {
+            /* Выбираем очередную машину */
+            if (currentQueue == null) {
+                block(500);
+                return;
+            }
+            currentCar = ((Agent_TrafficLight) myAgent).pollCarFromQueue(currentQueue);
+            if (currentCar == null) {
+                block(100);
+                return;
+            }
 
-            if (currentState == CarsHandlerState.SENDING_GREEN_LIGHT_MESSAGE) {
+            /* Посылаем сообщение машине - "зелёный свет" */
+            ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+            message.setConversationId("GL".concat(String.valueOf(CITY.getNextID())));
+            message.addReceiver(new AID(currentCar, AID.ISLOCALNAME));
+            message.setOntology("green-light");
+            message.setContent("green-light");
+            message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+            send(message);
 
-                /* Выбираем очередную машину */
-                if (currentQueue == null) {
-                    return;
-                }
-                currentCar = ((Agent_TrafficLight) myAgent).pollCarFromQueue(currentQueue);
-                if (currentCar == null) {
-                    return;
-                }
+            /* Сохраняем имя текущей машины в шаблон */
+            greenLightTemplate = MessageTemplate.and(
+                    MessageTemplate.MatchOntology("green-light"),
+                    MessageTemplate.MatchSender(new AID(currentCar, AID.ISLOCALNAME)));
+            greenLightReceiver = new ReceiverBehaviour(myAgent, receiverHandler, 10000, greenLightTemplate);
+            sequentialBehaviour.addSubBehaviour(greenLightReceiver);
+            sequentialBehaviour.addSubBehaviour(new GreenLightResponseHandler());
+            sequentialBehaviour.removeSubBehaviour(this);
+        }
+    }
 
-                /* Посылаем сообщение машине - "зелёный свет" */
-                ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-                message.addReceiver(new AID(currentCar, AID.ISLOCALNAME));
-                message.setOntology("green-light");
-                message.setContent("green-light");
-                send(message);
+    private class GreenLightResponseHandler extends OneShotBehaviour {
 
-                currentState = CarsHandlerState.WAITING_FOR_GREEN_LIGHT_MESSAGE_RESPONSE;
+        /* Обработка ответа на "зелёный свет" */
 
-            } else if (currentState == CarsHandlerState.WAITING_FOR_GREEN_LIGHT_MESSAGE_RESPONSE) {
+        @Override
+        public void action() {
+            /* Получаем ответ. После ответа можно переходить к следующей машине */
+            ACLMessage response = null;
+            try {
+                response = receiverHandler.getMessage();
+            } catch (ReceiverBehaviour.TimedOut timedOut) {
+                /* Если машина не ответила, выводим предупреждение и переходим к следующей */
+                System.out.println("Warning: " + myAgent.getLocalName() + " didn't get reply from " + currentCar);
+            } catch (ReceiverBehaviour.NotYetReady notYetReady) {
+                notYetReady.printStackTrace();
+            } finally {
+                currentCar = null;
 
-                /* Получаем ответ. Если машина приехала в пункт назначения, заканчиваем итерацию */
-                MessageTemplate responseTemplate = MessageTemplate.MatchOntology("green-light");
-                ACLMessage response = myAgent.receive(responseTemplate);
-                if (response == null) {
-                    block();
-                } else if (response.getContent().equals("finish")) {
-                    currentCar = null;
-                    currentState = CarsHandlerState.SENDING_GREEN_LIGHT_MESSAGE;
-                    return;
-                } else {
-                    currentState = CarsHandlerState.INITIATING_CONTRACTS_NET;
-                }
+                /* Запускаем обработку машин заново */
+                sequentialBehaviour.removeSubBehaviour(greenLightReceiver);
+                sequentialBehaviour = new SequentialBehaviour(myAgent);
+                sequentialBehaviour.addSubBehaviour(new GreenLightSender());
+                addBehaviour(sequentialBehaviour);
+            }
+        }
+    }
 
-            } else if (currentState == CarsHandlerState.INITIATING_CONTRACTS_NET) {
-
-                /* Если машине нужно ехать дальше, запускаем сеть контрактов */
-                ACLMessage msg = new ACLMessage(ACLMessage.CFP);
-                for (String tl : outcoming) {
-                    msg.addReceiver(new AID(tl, AID.ISLOCALNAME));
-                }
-                msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-                msg.setOntology("traffic-lights-contract");
-                /* Мы хотим получить ответ в течение секунды */
-                // TODO: уточнить срок получения ответа в сети контрактов
-                msg.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-                msg.setContent("queue-length");
-
-                currentState = CarsHandlerState.HANDLING_PROPOSALS;
-
-                addBehaviour(new ContractNetInitiator(getAgent(), msg) {
-
-                    @Override
-                    protected void handleAllResponses(final Vector responses, final Vector acceptances) {
-
-                        /* В этом методе обрабатываются предложения других светофоров */
-
-                        String content = "";
-
-                        /* Составляем ответное сообщение для машины.
-                         * Формат сообщения: "имя_светофора1:число1;имя_светофора2:число2;...;имя_светофораN:числоN" */
-                        Enumeration proposals = responses.elements();
-                        while (proposals.hasMoreElements()) {
-                            ACLMessage msg = (ACLMessage) proposals.nextElement();
-                            content = content.concat(msg.getSender().getLocalName()).concat(":")
-                                    .concat(msg.getContent()).concat(";");
-                        }
-                        if (content == "") {
-                            int k = 0;
-                        }
-                        content = content.substring(0, content.length() - 1);
-
-                        /* Отправляем сообщение машине */
-                        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-                        message.addReceiver(new AID(currentCar, AID.ISLOCALNAME));
-                        message.setOntology("traffic-lights-contract");
-                        message.setContent(content);
-                        send(message);
-
-                        /* Получаем ответ - решение машины */
-                        MessageTemplate responseTemplate = MessageTemplate.and(
-                                MessageTemplate.MatchOntology("traffic-lights-contract"),
-                                MessageTemplate.MatchPerformative(ACLMessage.AGREE));
-
-                        ACLMessage msg = myAgent.blockingReceive(responseTemplate);
-
-                        /* Создаём ответы светофорам - и для подтверждения, и для отказа от услуги */
-                        String chosen = msg.getContent();
-                        Enumeration e = responses.elements();
-                        while (e.hasMoreElements()) {
-                            ACLMessage offer = (ACLMessage) e.nextElement();
-                            if (offer.getPerformative() == ACLMessage.PROPOSE) {
-                                ACLMessage reply = offer.createReply();
-                                if (chosen != null && offer.getSender().getLocalName().equals(chosen)) {
-                                    /* В сообщении для выбранного светофора указываем имя машины */
-                                    reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                                    reply.setContent(currentCar);
-                                } else {
-                                    reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-                                }
-                                acceptances.addElement(reply);
-                            }
-                        } /* end of while block */
-
-
-                        addBehaviour(new WakerBehaviour(myAgent, 2000) {
-                            @Override
-                            protected void onWake() {
-                                super.onWake();
-                                currentCar = null;
-                                currentState = CarsHandlerState.SENDING_GREEN_LIGHT_MESSAGE;
-                            }
-                        }); /* end of WakerBehaviour */
-                    } /* end of handleAllResponses() */
-                }); /* end of addBehaviour(ContractNetInitiator) */
-            } /* end of (currentState == CarsHandlerState.INITIATING_CONTRACTS_NET) */
-        } /* end of action() */
-    } /* end of CarsHandlerBehaviour */
-
-    private class TLRequestsHandler extends ContractNetResponder {
-        public TLRequestsHandler(Agent a, MessageTemplate mt) {
+    private class CarRequestsHandler extends ContractNetResponder {
+        public CarRequestsHandler(Agent a, MessageTemplate mt) {
             super(a, mt);
         }
 
+        // TODO: обработчик слишком поздно получает собщение
         @Override
         protected ACLMessage handleCfp(ACLMessage cfp) {
             /* Обработка запроса услуги
              * В своём предложении светофор записывает длину очереди */
-            int proposal = ((Agent_TrafficLight) myAgent).getQueueLength(cfp.getSender().getLocalName());
+            int proposal = ((Agent_TrafficLight) myAgent).getQueueLength(cfp.getContent());
+            /* !!! DEBUG INFO !!! */
+            /*long delta = System.currentTimeMillis() - cfp.getReplyByDate().getTime();
+            if (delta > 0) {
+                System.out.println
+                        ("OH CRAP!!! " + myAgent.getLocalName() + " is late for " + String.valueOf((double) delta / 1000) + " seconds!");
+            }*/
             ACLMessage propose = cfp.createReply();
             propose.setPerformative(ACLMessage.PROPOSE);
             propose.setContent(String.valueOf(proposal));
@@ -250,8 +198,8 @@ public class Agent_TrafficLight extends Agent {
         @Override
         protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept){
             /* Если предложение светофора приняли, он добавляет машину в очередь */
-            String incomingCar = accept.getContent();
-            String from = accept.getSender().getLocalName();
+            String incomingCar = accept.getSender().getLocalName();
+            String from = accept.getContent();
             ((Agent_TrafficLight) myAgent).putCarToQueue(from, incomingCar);
             ACLMessage inform = accept.createReply();
             inform.setPerformative(ACLMessage.INFORM);
@@ -266,7 +214,6 @@ public class Agent_TrafficLight extends Agent {
          * iterationsPassedSinceLastSwitch - время последнего переключения светофора */
         String[] queuesList = cars.keySet().toArray(new String[0]);
         int i = 0;
-        int iterationsPassedSinceLastSwitch = 0;
 
         /* period - интервал в миллисекундах, через который циклически будет выполняться метод onTick() */
         public QueueSwitchBehaviour(Agent a, long period) {
@@ -281,21 +228,18 @@ public class Agent_TrafficLight extends Agent {
                 return;
             }
 
-            iterationsPassedSinceLastSwitch++;
-
             /* Если в очереди нет машин ИЛИ переключались более 30 секунд назад */
-            if (getQueueLength(currentQueue) == 0 || iterationsPassedSinceLastSwitch >= 30) {
+            if (getQueueLength(currentQueue) == 0 || this.getTickCount() >= 30) {
                 /* Выбираем следующий светофор; если дошли до конца списка - начинаем сначала */
                 if (++i >= queuesList.length) {
                     i = 0;
                 }
-
-                /* Сбрасываем счётчик итераций */
-                iterationsPassedSinceLastSwitch = 0;
-
                 currentQueue = queuesList[i];
                 /*System.out.println("Debug: " + myAgent.getLocalName() + " changed to "
                         + currentQueue + " handling at " + new Date());*/
+
+                /* Сбрасываем счётчик итераций */
+                reset();
             }
         }
     }
@@ -313,9 +257,6 @@ public class Agent_TrafficLight extends Agent {
 
     /* Поместить машину carLocalName в очередь от светофора tlLocalNeme */
     private void putCarToQueue(String tlLocalName, String carLocalName) {
-        if (tlLocalName == null || carLocalName == null) {
-            int k = 0;
-        }
         cars.get(tlLocalName).addLast(carLocalName);
     }
 

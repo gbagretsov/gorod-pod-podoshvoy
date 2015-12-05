@@ -39,11 +39,13 @@ public class Agent_Initialize extends Agent {
 
                     }
 
+
                     /* Добавляем машины
                      * Аргументы: { beginFrom, beginTo, map, finish } */
 
                     /* Случайная генерация */
                     /*for (int i = 0; i < 10; i++) {
+                        Thread.sleep(500);
                         Object[] args = new Object[4];
                         Random random = new Random();
                         int from, to, finish;
@@ -59,13 +61,15 @@ public class Agent_Initialize extends Agent {
                         getContainerController()
                                 .createNewAgent("car_".concat(String.valueOf(i)), "com.company.Agent_Car", args)
                                 .start();
-                    } */
+                    }*/
 
                     /* Тестовая генерация */
-                    for (int i = 0; i < 10; i++) {
+                    Thread.sleep(10000);
+                    for (int i = 0; i < 30; i++) {
+                        Thread.sleep(500);
                         Object[] args = new Object[4];
-                        args[0] = "tl_2";
-                        args[1] = "tl_0";
+                        args[0] = "tl_0";
+                        args[1] = "tl_1";
                         args[2] = city.getMap();
                         args[3] = "tl_19";
                         getContainerController()
@@ -75,8 +79,9 @@ public class Agent_Initialize extends Agent {
 
                 } catch (StaleProxyException e) {
                     e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-
 
             }
 
