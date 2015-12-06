@@ -3,6 +3,7 @@ package com.company;
 import javax.xml.bind.helpers.ParseConversionEventImpl;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Algorythm {
@@ -67,7 +68,8 @@ public class Algorythm {
         return Dijkstra;
     }
     public static String GetNextTL (String i_cur_string, Integer[][] City, Hashtable<String, Integer> Traffic_NextTL,
-                                    ArrayList<String> path, ArrayList<String> cantgohere, Integer finish){
+                                    ArrayList<String> path, ArrayList<String> cantgohere, Integer finish,
+                                    Queue<Integer> key_memory, Integer[][] value_memory){
 
         /* выбираем номер нашего светофора для дейкстры */
         String MyTL = new String(i_cur_string.replaceAll("tl_", ""));
@@ -79,7 +81,7 @@ public class Algorythm {
             for (int j=0; j<City.length; j++) {
                 roads_counter += City[i][j];
             }
-        Hashtable<String, Integer> Dijkstra = dijkstra(icur, City);
+        Hashtable<String, Integer> Dijkstra ;
         Integer min_way;
         min_way = 0;
 
@@ -103,17 +105,41 @@ public class Algorythm {
         Hashtable<String, Integer> TL_Price = new Hashtable<String, Integer>();
 
         Integer k;
+        Integer delete_from_memory = null;
         String  min_key = "error";
         Integer min_koef = Integer.MAX_VALUE;
 
 
-        Dijkstra = dijkstra(icur, City);
+
         for (Integer i=0; i<City.length; i++){
                 Dijkstra = dijkstra(i, City);
-                if (( City[icur][i] > 0)&&(!path.contains("tl_".concat(i.toString()))) && ((Dijkstra.get("tl_".concat(finish.toString()))+1) <= max_way)) {
-                k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + (Dijkstra.get("tl_".concat(finish.toString()))+1)*3 ;
+                if (( City[icur][i] > 0)&& ((Dijkstra.get("tl_".concat(finish.toString()))+1) <= max_way)) {
+
+                if(value_memory[icur][i]==1){
+                  k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + (Dijkstra.get("tl_".concat(finish.toString()))+1)*3 ;
+                    value_memory[icur][i] = k; }
+                else k = value_memory[icur][i] + 3 + Traffic_NextTL.get("tl_".concat(i.toString()))*2;
+
+                    // добавляем пробку в память авто
+                    if (key_memory.contains(i) && key_memory.peek() != i) {
+                        key_memory.remove(i);
+                        key_memory.add(i);
+                    }
+                    else if (!key_memory.contains(i)) {
+                        key_memory.add(i);
+                    }
+                    if (key_memory.size() >= 5){
+                      delete_from_memory =  key_memory.poll();
+                      for (Integer j = 0; j< City.length; j++) {
+                          if (value_memory[delete_from_memory][i] > 1)
+                              value_memory[delete_from_memory][i] = 1;
+                      }
+                    }
+
+
                 if ((k < min_koef)
-                        &&(!cantgohere.contains("tl_".concat(i.toString())))) {
+                       // &&(!cantgohere.contains("tl_".concat(i.toString())))
+                    ) {
                     min_koef = k;
                     min_key = "tl_".concat(i.toString());
                 }

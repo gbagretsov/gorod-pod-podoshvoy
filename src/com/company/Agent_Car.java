@@ -23,6 +23,8 @@ public class Agent_Car extends Agent {
     private  Object[] args;
     private Date startTime;
     private Integer[][] map;
+    private Integer[][] value_memory;
+    private Queue<Integer> key_memory;
 
     SequentialBehaviour sequentialBehaviour;
     ReceiverBehaviour.Handle receiverHandler;
@@ -43,6 +45,8 @@ public class Agent_Car extends Agent {
         send(message);
         currentTrafficLight = args[1].toString();
         map = (Integer[][]) args[2];
+        value_memory = (Integer[][]) args[2];
+        key_memory = new PriorityQueue<Integer>();
 
         /* Запоминаем позицию финиша */
         finish = args[3].toString();
@@ -69,6 +73,7 @@ public class Agent_Car extends Agent {
 
         /*инициализируем список вершин, запрещенных для проезда*/
         cant_go_here = new ArrayList<String> ();
+
     }
 
     private class RoadsCrossHandler extends OneShotBehaviour {
@@ -202,7 +207,7 @@ public class Agent_Car extends Agent {
         private String choosePath(Hashtable<String, Integer> proposals) {
             Integer i = Integer.valueOf(finish.replace("tl_", ""));
             ArrayList<String> cant = Algorythm.CantGoThere(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), path, i );
-            return Algorythm.GetNextTL(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), proposals, path, cant, i);
+            return Algorythm.GetNextTL(currentTrafficLight, ((Integer[][]) ((Agent_Car) myAgent).args[2]), proposals, path, cant, i, key_memory, value_memory );
             /*Object[] props = proposals.keySet().toArray();
             return props[new Random().nextInt(props.length)].toString();*/
         }
