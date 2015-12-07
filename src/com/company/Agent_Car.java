@@ -2,9 +2,7 @@ package com.company;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.ReceiverBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -24,11 +22,8 @@ public class Agent_Car extends Agent {
     private Date startTime;
     private Integer[][] map;
 
-    SequentialBehaviour sequentialBehaviour;
-    ReceiverBehaviour.Handle receiverHandler;
-    ReceiverBehaviour greenLightReceiver;
-
-    MessageTemplate greenLightTemplate = MessageTemplate.MatchOntology("green-light");
+    MessageTemplate greenLightTemplate = MessageTemplate.MatchContent(Agent_Initialize.GREEN_LIGHT);
+    private boolean waitingForGreenLight;
 
     @Override
     protected void setup()  {
@@ -38,7 +33,7 @@ public class Agent_Car extends Agent {
         ACLMessage message = new ACLMessage(ACLMessage.INFORM);
         message.addReceiver(new AID(args[1].toString(), AID.ISLOCALNAME));
         message.setConversationId("NEW".concat(String.valueOf(CITY.getNextID())));
-        message.setOntology("coming-to-town");
+        message.setOntology(Agent_Initialize.LOCATION);
         message.setContent(args[0].toString());
         send(message);
         currentTrafficLight = args[1].toString();
@@ -57,32 +52,33 @@ public class Agent_Car extends Agent {
         /* Запоминаем текущее время */
         startTime = new Date();
 
-        /* Подготовка и запуск последовательного поведения, состоящего из:
-           1. получения сообщения;
-           2. логики работы на перекрёстке */
-        receiverHandler = ReceiverBehaviour.newHandle();
-        greenLightReceiver = new ReceiverBehaviour(this, receiverHandler, -1, greenLightTemplate);
-        sequentialBehaviour = new SequentialBehaviour(this);
-        sequentialBehaviour.addSubBehaviour(greenLightReceiver);
-        sequentialBehaviour.addSubBehaviour(new RoadsCrossHandler());
-        addBehaviour(sequentialBehaviour);
+        waitingForGreenLight = true;
+
+        addBehaviour(new RoadsCrossHandler());
 
         /*инициализируем список вершин, запрещенных для проезда*/
         cant_go_here = new ArrayList<String> ();
     }
 
-    private class RoadsCrossHandler extends OneShotBehaviour {
+    private class RoadsCrossHandler extends CyclicBehaviour {
 
         @Override
         public void action() {
             /* Ждём зелёного сигнала от светофора */
-            ACLMessage response = null;
-            try {
-                response = receiverHandler.getMessage();
-                ACLMessage reply = response.createReply();
-                reply.setContent("proceed");
+            if (!waitingForGreenLight) {
+                block(100);
+                return;
+            }
+            ACLMessage msg = receive(greenLightTemplate);
+            if (msg == null) {
+                block();
+            }
+            else {
+                waitingForGreenLight = false;
+                ACLMessage reply = msg.createReply();
+                reply.setContent(Agent_Initialize.PROCEED);
                 /* Если мы на финише, сообщаем об этом и заканчиваем работу */
-                if (response.getSender().getLocalName().equals(finish)) {
+                if (msg.getSender().getLocalName().equals(finish)) {
                     send(reply);
                     myAgent.doDelete();
                 }
@@ -93,7 +89,7 @@ public class Agent_Car extends Agent {
                     }
                     cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
                     cfp.setConversationId("CN".concat(String.valueOf(CITY.getNextID())));
-                    cfp.setOntology("traffic-lights-contract");
+                    cfp.setOntology(Agent_Initialize.QUEUE_LENGTH);
                     /* Мы хотим получить ответ в течение секунды */
                     // TODO: пока пришлось отключить тайм-аут, т.к. часто светофоры не успевают принять сообщение
                     //cfp.setReplyByDate(new Date(System.currentTimeMillis() + 1000));
@@ -102,10 +98,6 @@ public class Agent_Car extends Agent {
                     /* Запускаем контрактную сеть */
                     addBehaviour(new TLContractNetInitiator(myAgent, cfp, reply));
                 }
-            } catch (ReceiverBehaviour.TimedOut timedOut) {
-                timedOut.printStackTrace();
-            } catch (ReceiverBehaviour.NotYetReady notYetReady) {
-                notYetReady.printStackTrace();
             }
         }
 
@@ -141,8 +133,6 @@ public class Agent_Car extends Agent {
                 proposalsHashtable.put(msg.getSender().getLocalName(), Integer.parseInt(msg.getContent()));
             }
 
-            // TODO: обрабатывать сломанные (не ответившие) светофоры
-            // TODO: возможно, стоит по-другому обрабатывать ситуации, когда некуда поворачивать
             if (proposalsHashtable.isEmpty()) {
                 System.out.println("Warning: " + myAgent.getLocalName() + " has no roads to turn and is now terminating...");
                 myAgent.doDelete();
@@ -150,7 +140,6 @@ public class Agent_Car extends Agent {
             }
 
             /* Выбираем путь */
-            //System.out.println(myAgent.getLocalName() + proposalsHashtable.toString() + currentTrafficLight);
             decision = choosePath(proposalsHashtable);
 
             /* Имитируем поворот */
@@ -194,9 +183,7 @@ public class Agent_Car extends Agent {
             /* Отправляем ответ светофору, с которого свернули */
             send(greenLightReply);
             /* Вновь входим в режим ожидания сообщения, но уже от нового светофора */
-            greenLightReceiver.reset();
-            sequentialBehaviour.reset();
-            myAgent.addBehaviour(sequentialBehaviour);
+            waitingForGreenLight = true;
         }
 
         private String choosePath(Hashtable<String, Integer> proposals) {

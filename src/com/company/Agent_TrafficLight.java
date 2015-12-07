@@ -20,6 +20,7 @@ public class Agent_TrafficLight extends Agent {
     private List<String> outcoming;
     private String currentQueue;
     private String currentCar;
+    private boolean isHandlingACar;
 
     SequentialBehaviour sequentialBehaviour;
     ReceiverBehaviour.Handle receiverHandler;
@@ -31,9 +32,9 @@ public class Agent_TrafficLight extends Agent {
      * 3. сообщение о новой машине */
     MessageTemplate cfpTemplate = MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.CFP),
-            MessageTemplate.MatchOntology("traffic-lights-contract"));
-    MessageTemplate greenLightTemplate = MessageTemplate.MatchOntology("green-light");
-    MessageTemplate newCarTemplate = MessageTemplate.MatchOntology("coming-to-town");
+            MessageTemplate.MatchOntology(Agent_Initialize.QUEUE_LENGTH));
+    MessageTemplate greenLightTemplate = MessageTemplate.MatchContent(Agent_Initialize.PROCEED);
+    MessageTemplate newCarTemplate = MessageTemplate.MatchOntology(Agent_Initialize.LOCATION);
 
     @Override
     protected void setup() {
@@ -70,17 +71,14 @@ public class Agent_TrafficLight extends Agent {
                 + "; in: "  + incomingString
                 + "; out: " + outcomingString);*/
 
+        isHandlingACar = false;
+
         if (cars.keySet().size() > 0) {
 
             addBehaviour(new QueueSwitchBehaviour(this, 1000));
             addBehaviour(new NewCarsComingToTownHandlerBehaviour());
             addBehaviour(new CarRequestsHandler(this, cfpTemplate));
-
-            /* Инициализация и запуск последовательных поведений, связанных с обработкой машин в очереди */
-            receiverHandler = ReceiverBehaviour.newHandle();
-            sequentialBehaviour = new SequentialBehaviour(this);
-            sequentialBehaviour.addSubBehaviour(new GreenLightSender());
-            addBehaviour(sequentialBehaviour);
+            addBehaviour(new GreenLightSender());
         }
     }
 
@@ -114,6 +112,13 @@ public class Agent_TrafficLight extends Agent {
 
         @Override
         public void action() {
+
+            /* Если уже обрабатываем машину, ждём завершения итерации */
+            if (isHandlingACar) {
+                block(100);
+                return;
+            }
+
             /* Выбираем очередную машину */
             if (currentQueue == null) {
                 block(500);
@@ -125,23 +130,27 @@ public class Agent_TrafficLight extends Agent {
                 return;
             }
 
+            isHandlingACar = true;
+
             /* Посылаем сообщение машине - "зелёный свет" */
             ACLMessage message = new ACLMessage(ACLMessage.INFORM);
             message.setConversationId("GL".concat(String.valueOf(CITY.getNextID())));
             message.addReceiver(new AID(currentCar, AID.ISLOCALNAME));
-            message.setOntology("green-light");
-            message.setContent("green-light");
+            message.setContent(Agent_Initialize.GREEN_LIGHT);
             message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
             send(message);
 
+            /* Инициализация и запуск последовательных поведений, связанных с обработкой машин в очереди */
+            receiverHandler = ReceiverBehaviour.newHandle();
+            sequentialBehaviour = new SequentialBehaviour(myAgent);
             /* Сохраняем имя текущей машины в шаблон */
             greenLightTemplate = MessageTemplate.and(
-                    MessageTemplate.MatchOntology("green-light"),
+                    MessageTemplate.MatchContent(Agent_Initialize.PROCEED),
                     MessageTemplate.MatchSender(new AID(currentCar, AID.ISLOCALNAME)));
             greenLightReceiver = new ReceiverBehaviour(myAgent, receiverHandler, 10000, greenLightTemplate);
             sequentialBehaviour.addSubBehaviour(greenLightReceiver);
             sequentialBehaviour.addSubBehaviour(new GreenLightResponseHandler());
-            sequentialBehaviour.removeSubBehaviour(this);
+            myAgent.addBehaviour(sequentialBehaviour);
         }
     }
 
@@ -162,12 +171,7 @@ public class Agent_TrafficLight extends Agent {
                 notYetReady.printStackTrace();
             } finally {
                 currentCar = null;
-
-                /* Запускаем обработку машин заново */
-                sequentialBehaviour.removeSubBehaviour(greenLightReceiver);
-                sequentialBehaviour = new SequentialBehaviour(myAgent);
-                sequentialBehaviour.addSubBehaviour(new GreenLightSender());
-                addBehaviour(sequentialBehaviour);
+                isHandlingACar = false;
             }
         }
     }
@@ -184,11 +188,8 @@ public class Agent_TrafficLight extends Agent {
              * В своём предложении светофор записывает длину очереди */
             int proposal = ((Agent_TrafficLight) myAgent).getQueueLength(cfp.getContent());
             /* !!! DEBUG INFO !!! */
-            /*long delta = System.currentTimeMillis() - cfp.getReplyByDate().getTime();
-            if (delta > 0) {
-                System.out.println
-                        ("OH CRAP!!! " + myAgent.getLocalName() + " is late for " + String.valueOf((double) delta / 1000) + " seconds!");
-            }*/
+            /*long delta = System.currentTimeMillis() - cfp.getPostTimeStamp();
+            System.out.println(myAgent.getLocalName() + " " + ((double) delta / 1000));*/
             ACLMessage propose = cfp.createReply();
             propose.setPerformative(ACLMessage.PROPOSE);
             propose.setContent(String.valueOf(proposal));

@@ -10,6 +10,14 @@ import java.util.Random;
 
 public class Agent_Initialize extends Agent {
 
+    /* Значения ontology */
+    public static final String QUEUE_LENGTH = "queue-length";
+    public static final String LOCATION = "location";
+
+    /* Значения content */
+    public static final String GREEN_LIGHT = "green-light";
+    public static final String PROCEED = "proceed";
+
     @Override
     protected void setup() {
         addBehaviour(new OneShotBehaviour(this) {
