@@ -74,14 +74,15 @@ public class Algorythm {
         /* выбираем номер нашего светофора для дейкстры */
         String MyTL = new String(i_cur_string.replaceAll("tl_", ""));
         Integer icur = Integer.parseInt (MyTL);
-        Integer roads_counter = 0;
+        /*Integer roads_counter = 0;
 
         //количество дорог в городе
         for (int i = 0; i< City.length; i++)
             for (int j=0; j<City.length; j++) {
                 roads_counter += City[i][j];
-            }
-        Hashtable<String, Integer> Dijkstra ;
+            }*/
+        Hashtable<String, Integer> Dijkstra_roads ;
+        Hashtable<String, Integer> Dijkstra_memory ;
         Integer min_way;
         min_way = 0;
 
@@ -89,8 +90,8 @@ public class Algorythm {
         // просматриваем путь от смежных до финиша
         for (Integer i=1; i< City.length; i++) {
             if(City[icur][i] > 0) {
-                Dijkstra = dijkstra(i, City);
-              Integer dijkstra_i = Dijkstra.get("tl_".concat(finish.toString()))+1;
+                Dijkstra_roads = dijkstra(i, City);
+              Integer dijkstra_i = Dijkstra_roads.get("tl_".concat(finish.toString()))+1;
               if ((dijkstra_i < min_way)||(min_way == 0))
                   min_way = dijkstra_i;
             }
@@ -112,13 +113,14 @@ public class Algorythm {
 
 
         for (Integer i=0; i<City.length; i++){
-                Dijkstra = dijkstra(i, City);
-                if (( City[icur][i] > 0)&& ((Dijkstra.get("tl_".concat(finish.toString()))+1) <= max_way)) {
+                Dijkstra_memory = dijkstra(i, value_memory);
+                Dijkstra_roads = dijkstra(i, City);
 
-                if(value_memory[icur][i]==1){
-                  k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + (Dijkstra.get("tl_".concat(finish.toString()))+1)*3 ;
-                    value_memory[icur][i] = k; }
-                else k = value_memory[icur][i] + 3 + Traffic_NextTL.get("tl_".concat(i.toString()))*2;
+                if (( City[icur][i] > 0)&& ((Dijkstra_roads.get("tl_".concat(finish.toString()))+1) <= max_way)) {
+
+                  k = Traffic_NextTL.get("tl_".concat(i.toString()))*2 + (Dijkstra_memory.get("tl_".concat(finish.toString()))+1)*3 ;
+                  value_memory[icur][i] = k;
+
 
                     // добавляем пробку в память авто
                     if (key_memory.contains(i) && key_memory.peek() != i) {
@@ -138,9 +140,7 @@ public class Algorythm {
                     }
 
 
-                if ((k < min_koef)
-                       // &&(!cantgohere.contains("tl_".concat(i.toString())))
-                    ) {
+                if ((k < min_koef)) {
                     min_koef = k;
                     min_key = "tl_".concat(i.toString());
                 }
