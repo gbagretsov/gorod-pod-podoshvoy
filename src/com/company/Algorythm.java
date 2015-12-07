@@ -123,13 +123,13 @@ public class Algorythm {
 
 
                 // добавляем пробку в память авто
-                if (key_memory.contains(i) && key_memory.peek() != i) {
-                    key_memory.remove(i);
-                    key_memory.add(i);
+                if (key_memory.contains(icur) && key_memory.peek() != icur) {
+                    key_memory.remove(icur);
+                    key_memory.add(icur);
 
                 }
-                else if (!key_memory.contains(i)) {
-                    key_memory.add(i);
+                else if (!key_memory.contains(icur)) {
+                    key_memory.add(icur);
                 }
                 if (key_memory.size() >= 5){
                     delete_from_memory =  key_memory.poll();
