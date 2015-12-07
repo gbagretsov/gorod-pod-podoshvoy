@@ -48,7 +48,15 @@ public class Agent_Car extends Agent {
         send(message);
         currentTrafficLight = args[1].toString();
         map = (Integer[][]) args[2];
-        value_memory = (Integer[][]) args[2];
+        Integer temp;
+
+        value_memory = new Integer[((Integer[][]) args[2]).length][((Integer[][]) args[2]).length];
+        for (Integer i = 0; i < ((Integer[][]) args[2]).length; i++)
+            for (Integer j = 0; j < ((Integer[][]) args[2]).length; j++) {
+                temp = map[i][j];
+                value_memory[i][j] = temp;
+            }
+
         key_memory = new PriorityQueue<Integer>();
 
         /* Запоминаем позицию финиша */
@@ -238,6 +246,7 @@ public class Agent_Car extends Agent {
             System.out.println("Car " + getLocalName() +
                     " arrived to its destination " + finish +
                     " in " + (double) tripDuration / 1000 + " seconds by route: " + route);
+
 
             CITY.handleCarFinish(this.getLocalName(), tripDuration, path.size());
         }

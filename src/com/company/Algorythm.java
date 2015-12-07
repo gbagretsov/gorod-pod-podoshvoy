@@ -124,6 +124,7 @@ public class Algorythm {
                     if (key_memory.contains(i) && key_memory.peek() != i) {
                         key_memory.remove(i);
                         key_memory.add(i);
+
                     }
                     else if (!key_memory.contains(i)) {
                         key_memory.add(i);
@@ -148,6 +149,7 @@ public class Algorythm {
 
             TL_Price.put("tl_".concat(i.toString()), k);
         }
+
         return  min_key;
     }
     public static ArrayList<String> CantGoThere (String current, Integer[][] City, ArrayList<String> path, Integer finish) {
