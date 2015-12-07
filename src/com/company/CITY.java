@@ -100,6 +100,7 @@ class CITY {
     }
 
     public static void printStatistics() {
+        System.out.println("Total cars: " + totalCars);
         System.out.println("Total trip time: " + (double) totalTripTime / 1000 + " seconds");
         System.out.println("Average trip time: " + (double) totalTripTime / 1000 / (totalCars - failedCars) + " seconds");
         System.out.println("Total roads passed: " + totalRoadsPassed);
