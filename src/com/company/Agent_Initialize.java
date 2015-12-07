@@ -53,15 +53,15 @@ public class Agent_Initialize extends Agent {
                      * Аргументы: { beginFrom, beginTo, map, finish } */
 
                     /* Случайная генерация */
-                    /*for (int i = 0; i < 10; i++) {
+                    for (int i = 0; i < 50; i++) {
                         Thread.sleep(500);
                         Object[] args = new Object[4];
                         Random random = new Random();
                         int from, to, finish;
                         do {
-                            from = random.nextInt(city.getMap().length);
-                            to = random.nextInt(city.getMap().length);
-                            finish = random.nextInt(city.getMap().length);
+                            from = random.nextInt(16);
+                            to = random.nextInt(16);
+                            finish = random.nextInt(4) + 36;
                         } while (map[from][to] != 1 || to == 0 || finish == to);
                         args[0] = "tl_".concat(String.valueOf(from));
                         args[1] = "tl_".concat(String.valueOf(to));
@@ -70,10 +70,10 @@ public class Agent_Initialize extends Agent {
                         getContainerController()
                                 .createNewAgent("car_".concat(String.valueOf(i)), "com.company.Agent_Car", args)
                                 .start();
-                    }*/
+                    }
 
                     /* Тестовая генерация */
-                    Thread.sleep(10000);
+                    /*Thread.sleep(10000);
                     for (int i = 0; i < 30; i++) {
                         Thread.sleep(500);
                         Object[] args = new Object[4];
@@ -84,7 +84,7 @@ public class Agent_Initialize extends Agent {
                         getContainerController()
                                 .createNewAgent("car_".concat(String.valueOf(i)), "com.company.Agent_Car", args)
                                 .start();
-                    }
+                    }*/
 
                 } catch (StaleProxyException e) {
                     e.printStackTrace();
