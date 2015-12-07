@@ -121,7 +121,7 @@ public class Agent_Car extends Agent {
             int index = Integer.parseInt(currentTrafficLight.replace("tl_", ""));
             ArrayList<String> outcoming = new ArrayList<String>();
             for (int i = 0; i < map.length; i++) {
-                if (map[index][i] == 1) {
+                if (map[index][i] > 0) {
                     outcoming.add("tl_".concat(String.valueOf(i)));
                 }
             }
