@@ -35,6 +35,9 @@ public class Agent_Car extends Agent {
     @Override
     protected void setup()  {
 
+        /* Увеличиваем счётчик для статистики */
+        CITY.increaseCarsAmount();
+
         /* Въезжаем в город и сообщаем об этом светофору, стоящему в конце исходной дуги */
         args = getArguments();
         ACLMessage message = new ACLMessage(ACLMessage.INFORM);
@@ -198,6 +201,8 @@ public class Agent_Car extends Agent {
 
             /* Отправляем ответ светофору, с которого свернули */
             send(greenLightReply);
+            /* Отправляем данные для статистики */
+            CITY.increaseRoadsPassed();
             /* Вновь входим в режим ожидания сообщения, но уже от нового светофора */
             greenLightReceiver.reset();
             sequentialBehaviour.reset();
@@ -216,7 +221,7 @@ public class Agent_Car extends Agent {
 
     @Override
     protected void takeDown() {
-        /* По прибытии выводим весь маршрут и время поездки на печать */
+        /* По прибытии выводим весь маршрут и время поездки на печать, а также отправляем данные для статистики */
         String route = "";
         if (currentTrafficLight.equals(finish)) {
             if (!path.contains(finish)) {
@@ -233,6 +238,12 @@ public class Agent_Car extends Agent {
             System.out.println("Car " + getLocalName() +
                     " arrived to its destination " + finish +
                     " in " + (double) tripDuration / 1000 + " seconds by route: " + route);
+
+            CITY.handleCarFinish(this.getLocalName(), tripDuration, path.size());
+        }
+        /* Если машина сломалась и не доехала до финиша, отправляем данные о поломке для статистики */
+        else {
+            CITY.handleCarFailure();
         }
     }
 }

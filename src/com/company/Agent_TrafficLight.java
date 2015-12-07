@@ -125,6 +125,13 @@ public class Agent_TrafficLight extends Agent {
                 return;
             }
 
+            /* Отправляем данные для сбора статистики */
+            int load = 0;
+            for (LinkedList<String> s : cars.values()) {
+                load += s.size();
+            }
+            CITY.setMaxLoadIfNeeded(load, myAgent.getLocalName());
+
             /* Посылаем сообщение машине - "зелёный свет" */
             ACLMessage message = new ACLMessage(ACLMessage.INFORM);
             message.setConversationId("GL".concat(String.valueOf(CITY.getNextID())));

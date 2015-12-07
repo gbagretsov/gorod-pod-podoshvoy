@@ -2,6 +2,7 @@ package com.company;
 
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.wrapper.StaleProxyException;
 
 import javax.swing.*;
@@ -86,5 +87,15 @@ public class Agent_Initialize extends Agent {
             }
 
         } );
+
+        addBehaviour(new TickerBehaviour(this, 5000) {
+            @Override
+            protected void onTick() {
+                if (CITY.getCurrentCarsAmount() == 0) {
+                    CITY.printStatistics();
+                    myAgent.removeBehaviour(this);
+                }
+            }
+        });
     }
 }
