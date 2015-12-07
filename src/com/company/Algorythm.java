@@ -113,6 +113,7 @@ public class Algorythm {
 
 
         for (Integer i=0; i<City.length; i++){
+
             Dijkstra_memory = dijkstra(i, value_memory);
             Dijkstra_roads = dijkstra(i, City);
 
@@ -122,16 +123,17 @@ public class Algorythm {
                 value_memory[icur][i] = (Traffic_NextTL.get("tl_".concat(i.toString())) != 0)?(Traffic_NextTL.get("tl_".concat(i.toString()))):(1);
 
 
-                // добавляем пробку в память авто
-                if (key_memory.contains(icur) && key_memory.peek() != icur) {
-                    key_memory.remove(icur);
-                    key_memory.add(icur);
+                if (value_memory[icur][i] > 1){
+                  // добавляем пробку в память авто
+                  if (key_memory.contains(icur) && key_memory.peek() != icur ) {
+                      key_memory.remove(icur);
+                      key_memory.add(icur);
 
-                }
-                else if (!key_memory.contains(icur)) {
-                    key_memory.add(icur);
-                }
-                if (key_memory.size() >= 5){
+                  }
+                  else if (!key_memory.contains(icur)) {
+                      key_memory.add(icur);
+                  }}
+                 if (key_memory.size() >= 5){
                     delete_from_memory =  key_memory.poll();
                     for (Integer j = 0; j< City.length; j++) {
                         if (value_memory[delete_from_memory][i] > 1)
