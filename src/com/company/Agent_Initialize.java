@@ -59,10 +59,10 @@ public class Agent_Initialize extends Agent {
                         Random random = new Random();
                         int from, to, finish;
                         do {
-                            from = random.nextInt(16);
-                            to = random.nextInt(16);
-                            finish = random.nextInt(4) + 36;
-                        } while (map[from][to] != 1 || to == 0 || finish == to);
+                            from = random.nextInt(18);
+                            to = random.nextInt(18);
+                            finish = random.nextInt(4) + 38;
+                        } while (map[from][to] != 1);
                         args[0] = "tl_".concat(String.valueOf(from));
                         args[1] = "tl_".concat(String.valueOf(to));
                         args[2] = city.getMap();
